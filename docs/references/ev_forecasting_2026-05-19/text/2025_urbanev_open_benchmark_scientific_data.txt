@@ -1,0 +1,683 @@
+                                                                                                      www.nature.com/scientificdata
+
+
+
+
+                UrbanEV: An Open Benchmark
+               OPEN
+
+Data Descriptor Dataset for Urban Electric Vehicle
+
+                Charging Demand Prediction
+                                                                                            1✉
+                               Han Li1,4, Haohao Qu2,4, Xiaojun Tan1, Linlin You                , Rui Zhu    3
+                                                                                                                 & Wenqi Fan2
+
+                               The recent surge in electric vehicles (EVs), driven by a collective push to enhance global environmental
+                               sustainability, has underscored the significance of exploring EV charging prediction. To catalyze
+                               further research in this domain, we introduce UrbanEV — an open dataset showcasing EV charging
+                               space availability and electricity consumption in a pioneering city for vehicle electrification, namely
+                               Shenzhen, China. UrbanEV offers a rich repository of charging data (i.e., charging occupancy, duration,
+                               volume, and price) captured at hourly intervals across an extensive six-month span for over 20,000
+                               individual charging stations. Beyond these core attributes, the dataset also encompasses diverse
+                               influencing factors like weather conditions and spatial proximity. Comprehensive experiments have
+                               been conducted to showcase the predictive capabilities of various models, including statistical, deep
+                               learning, and transformer-based approaches, using the UrbanEV dataset. This dataset is poised to
+                               propel advancements in EV charging prediction and management, positioning itself as a benchmark
+                               resource within this burgeoning field.
+
+
+
+                               Background & Summary
+                               In recent times, there has been a notable surge in the popularity of electric vehicles (EVs), driven by the goals of
+                               diminishing reliance on fossil fuels, ameliorating air quality, addressing global warming concerns, and advancing
+                               the United Nations’ Sustainable Development Goals pertaining to carbon neutrality1,2. The Global EV Outlook
+                               for 2024, as documented by the International Energy Agency (IEA)3, highlights a persistent increase in electric
+                               car sales, projecting a potential volume of approximately 17 million units by 2024. This figure would constitute
+                               over one-fifth of the total global car sales. Despite the manifold advantages associated with the electrification of
+                               vehicles, this widespread adoption presents formidable obstacles to the dependability and robustness of urban
+                               power grids and transportation infrastructures. Amongst these limited charging spaces, particularly in dense
+                               cities, creates the most anxiety for EV users, resulting in critical problems such as long parking cruising time and
+                               additional traffic congestion4. Another illustration lies in the unbalanced electricity consumption caused by reg-
+                               ular EV charging behaviors5,6. This fluctuation in demand during rush hour can impact the stability of the grid,
+                               potentially causing voltage fluctuations, frequency variations, and other issues that may affect the reliability of
+                               the power supply7,8. Given the ongoing expansion of EV charging infrastructure and the limited sustainability of
+                               relying solely on electricity to address associated challenges, many intelligent services have surfaced to manage
+                               EV charging demand9–12. These services include dynamic pricing mechanisms13, collaborative charging resource
+                               allocation strategies14,15, and parking guidance systems16.
+                                   The prediction of electric vehicle charging demand, which serves as a cornerstone for enabling intelligent
+                               EV services, has garnered growing attention from academic and industrial communities17–19. Accurate pre-
+                               dictions of regional EV charging demand can enable the provision of tailored parking suggestions to drivers
+                               in transit, alleviating range anxiety concerns, while regulatory bodies can implement dynamic pricing strat-
+                               egies to enhance energy efficiency. To achieve accurate prediction, related studies have attempted to leverage
+                               advanced data analysis techniques and predictive modeling to forecast the future charging demand for elec-
+                               tric vehicles18,20. It typically involves analyzing historical charging data, considering factors such as the num-
+                               ber of electric vehicles, their charging patterns, infrastructure availability, and external variables like weather
+
+                               1
+                                Sun Yat-sen University, School of Intelligent Systems Engineering, Shen Zhen, 518107, China. 2The Hong Kong
+                               Polytechnic University, Department of Computing, Hong Kong, Hong Kong. 3Institute of High Performance
+                               Computing (IHPC), Agency for Science, Technology and Research (A*STAR), 138632, Queenstown, Republic of
+                               Singapore. 4These authors contributed equally: Han Li, Haohao Qu. ✉e-mail: youllin@mail.sysu.edu.cn
+
+
+  Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                 1
+www.nature.com/scientificdata/                                                                            www.nature.com/scientificdata
+
+
+                              Dataset                        Time Span             Granularity   Scope     #EVSEs         Additional Factors*
+                              High-resolution EV Data   33
+                                                             Nov. 2014‐Oct. 2015   1hour         /         105 stations   User Habit, Location Type
+                              Perth and Kinross27            Sep. 2016‐Aug. 2019   1min          County    /              /
+                              ACN-Data28                     Sep. 2018‐Dec 2019    15min         Site      112 piles      /
+                              One-Year EV Charging Fleet29   May 2018‐Jul. 2020    10min         Site      30 piles       /
+                              Multi-faceted EV Charging30    Sep. 2021‐Sep. 2022   15min         /         2,119 piles    Location Type
+                              UrbanEV39                      Sep. 2022‐Feb. 2023   5min/1hour    Urban     17,532 piles   Price, Weather, POI, Geo-Data
+
+                             Table 1. Comparison of representative open datasets associated with electric vehicle charging, where “#”
+                             denotes the number of certain headers, “/” denotes that the item is not specified, and EVSE refers to Electric
+                             Vehicle Supply Equipment. * The “Additional Factors” item outlines the feature set provided beyond the
+                             charging data itself.
+
+
+
+                             conditions and time of day21. For example, a recent study investigated the performance of three conventional
+                             machine learning models, namely Long Short-Term Memory, Auto-Regressive Moving Average, and Multiple
+                             Layer Perceptron, in short-term EV charging forecasting22. Another in-depth research explored the effect of
+                             electricity price on electric vehicle charging demand by conducting correlation tests and estimating its price
+                             elasticity23. More recently inspired by the success of incorporating spatial information with temporal patterns in
+                             traffic prediction, spatial-temporal EV charging demand prediction has emerged as an attractive research topic
+                             in the literature. Representative examples include HSTGCN-EV24 and ChatEV25: The former one incorporated
+                             two heterogeneous graphs (i.e., a demand-based graph and a geographic graph) to improve predictive precision,
+                             while the latter one unified spatial and temporal factors within natural language and harnessed Large Language
+                             Models (LLMs) for regional EV charging prediction.
+                                 Although relevant research continues to expand, a well-structured open-source benchmark dataset that
+                             includes a wide array of features and establishes standardized comparison settings for predicting EV charging
+                             demand is still absent. Existing studies face several critical limitations with their data. Table 1 illustrates the
+                             comparison of representative publicly available datasets from various aspects. Firstly, most of them rely solely
+                             on charging data or consider only a limited number of factors, neglecting a comprehensive assessment of other
+                             potential influences26–29. Secondly, although numerous temporal patterns crucial for EV charging demand pre-
+                             diction have been identified, the current datasets are insufficient for delving into spatial analysis in EV charging
+                             behaviors30–33. Lastly, the diverse settings observed across studies introduce substantial variations, hindering a
+                             fair comparison of new techniques, frameworks, and models within relevant research19. These limitations hinder
+                             the advancements of EV charging prediction and related intelligent services in the era of big data.
+                                 To fill the gap, we present UrbanEV, an open dataset of EV charging in Shenzhen, China. The dataset
+                             compiles comprehensive information for a total of 1,682 public charging stations with 24,798 charging piles,
+                             shown in Fig. 1. After applying various data processing techniques, we refine the dataset to encompass 1,362
+                             charging stations with 17,532 public charging piles, making them well-suited for charging demand prediction.
+                             Specifically, it provides three charging data (i.e., occupancy, duration, and volume), four dynamic factors (i.e.,
+                             electricity price, service price, weather conditions, and time of day), three spatial attributes (i.e., adjacency,
+                             distance, and coordinates), and four static coefficients (i.e., point of interest, area, pile number, and station
+                             number). Moreover, our dataset covers the period from 1 September 2022 to 28 February 2023, encompassing
+                             six months with hourly granularity. This level of detail enables the exploration of short-, mid-, and long-term
+                             forecasting scenarios. Lastly, based on the station-level information, we further group the data into traffic zones,
+                             offering a new perspective on exploring regional EV charging patterns. As shown in Fig. 2, stations located in
+                             a specific traffic zone are integrated, and an adjacency matrix among neighboring zones can be built corre-
+                             spondingly to represent the spatial relationship. Making this dataset publicly accessible is intended to equip
+                             researchers, policymakers, and industry practitioners with the essential information needed for the effective
+                             and sustainable management of EV charging. This initiative aligns with national priorities and contributes to the
+                             overarching global sustainability objectives.
+
+                             Methods
+                             To build a comprehensive and reliable benchmark dataset, we conduct a series of rigorous processes from data
+                             collection to dataset evaluation. The overall workflow sequentially includes data acquisition, data processing,
+                             statistical analysis, and prediction assessment. As follows please see detailed descriptions.
+
+                             Study area and data acquisition.             Shenzhen, a pioneering city in global vehicle electrification, has been
+                             selected for this study with the objective of offering valuable insights into electric vehicle (EV) development that
+                             can serve as a reference for other urban centers. This study encompasses the entire expanse of Shenzhen, where
+                             data on public EV charging stations distributed around the city have been meticulously gathered. Specifically,
+                             EV charging data was automatically collected from a mobile platform used by EV drivers to locate public charg-
+                             ing stations. Through this platform, users could access real-time information on each charging pile, including
+                             its availability (e.g., busy or idle), charging price, and geographic coordinates. Accordingly, we recorded the
+                             charging-related data at five-minute intervals from September 1, 2022, to February 28, 2023. This data collection
+                             process was fully digital and did not require manual readings. Furthermore, to delve into the correlation between
+                             EV charging patterns and environmental elements, weather data (i.e., air temperature Ta, atmospheric pressure
+                             P, and relative humidity h) for Shenzhen city were acquired from two meteorological observatories situated in
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                            2
+www.nature.com/scientificdata/                                                                            www.nature.com/scientificdata
+
+
+
+
+                              Fig. 1 Spatial distribution of 1,682 public charging stations and 24,798 charging piles in the UrbanEV dataset.
+
+
+
+
+               (a)                                                                                                                      N
+
+
+
+
+               (b)                                              (c)                                       (d)      1    2    3    4    5  6
+                             14       2        7                             14               7
+                                                                        13                                      1 0 836 1252 1698 994 1083
+                                                                                  2
+                        12 13          4       8                                      4               8         2 836 0 1509 2405 806 1338
+                                                                       11    3    1                             3 1252 1509 0 1326 2123 2335
+                       11         1                                                       5       9
+                             3             9                            10        6                             4 1698 2405 1326 0 2677 2549
+                      10         6 5                                                                            5 994 806 2123 2677 0 648
+                                                                         1-hop                    2-hop         6 1083 1338 2335 2549 648 0
+
+                              Fig. 2 Data visualization of the filter areas. (a) illustrates the distribution of charging piles at the regional level.
+                              (b) provides an enlarged view of the CBD dynamic pricing areas. (c) depicts the node graph derived from the
+                              enlarged view, showcasing the center node of the enlarged region, its 1-hop and 2-hop neighbors, as well as their
+                              adjacency relationships. (d) presents the distance matrix (in meters) of the 1-hop neighbors of the center node
+                              in the enlarged region.
+
+
+                              the airport and central regions, respectively. These meteorological data are publicly available on the Shenzhen
+                              Government Data Open Platform. Thirdly, point of interest (POI) data was extracted through the Application
+
+
+
+Scientific Data |    (2025) 12:523                 | https://doi.org/10.1038/s41597-025-04874-4                                                     3
+www.nature.com/scientificdata/                                                                          www.nature.com/scientificdata
+
+
+                              Feature                                Max         Mean        Median       Min      Q1           Q3         Std
+                                                         o (%)       1           0.24        0.21         0        0.14         0.31       0.17
+                                                         d (hour)    175.83      9.64        5.00         0.00     1.50         12.50      12.78
+                                           Day           v (kWh)     13637.50    180.61      37.62        0.00     10.50        111.42     593.53
+                                                         pe (CNY)    1.80        0.98        0.99         0.23     0.86         1.10       0.18
+                                                         ps (CNY)    1.45        0.70        0.76         0.00     0.70         0.76       0.15
+                              EV
+                                                         o (%)       1.00        0.30        0.26         0.00     0.16         0.40       0.19
+                                                         d (hour)    207.58      13.58       6.00         0.00     1.92         16.58      19.54
+                                           Night         v (kWh)     16732.50    275.72      46.08        0.00     12.25        147.00     968.24
+                                                         pe (CNY)    1.80        0.93        0.94         0.23     0.79         1.06       0.23
+                                                         ps (CNY)    1.45        0.73        0.76         0.00     0.74         0.76       0.14
+                                           Ta (°C)                   34.70       21.18       21.40        8.30     16.40        26.30      5.92
+                              Weather      P (mmHg)                  773.80      762.49      762.40       751.10   759.90       765.50     4.18
+                                           h (%)                     97.00       69.33       72.00        21.00    58.00        82.00      16.49
+                                           Number of Piles           373.00      63.75       48.00        4.00     24.00        84.00      56.63
+                              Others       Distance (meter)          78680.32    21972.31    20476.39     0.00     12184.82     29764.97   12721.15
+                                           Number of Neighbors       10.00       4.36        4.00         0.00     3.00         6.00       1.82
+
+                             Table 2. Data statistics of the UrbanEV Dataset. This table presents data across three dimensions: EV, Weather,
+                             and Others. First, UrbanEV provides EV charging-related data, i.e., occupancy ratio (o), charging duration
+                             (d), charging volume (v), and charging price (including electricity price pe and service fee ps), with statistics at
+                             the traffic zone level. In the weather dimension, it offers three representative features that have the potential
+                             to influence charging behaviors, namely air temperature (Ta), atmospheric pressure (P), and relative humidity
+                             (h) across the entire study area. Lastly, information on pile number, adjacency, and distance within or between
+                             traffic zones is also incorporated into the dataset.
+
+
+
+                             Programming Interface Platform of AMap.com, along with three primary types: food and beverage services, busi-
+                             ness and residential, and lifestyle services. Lastly, the spatial and static data were organized based on the traffic
+                             zones delineated by the sixth Residential Travel Survey of Shenzhen34. The collected data contains detailed spati-
+                             otemporal information that can be analyzed to provide valuable insights about urban EV charging patterns and
+                             their correlations with meteorological conditions.
+
+                             Processing raw information into well-structured data.                     To streamline the utilization of UrbanEV
+                             dataset, we harmonize heterogeneous data from various sources into well-structured data with aligned temporal
+                             and spatial resolutions. An overview of the descriptive statistics of the processed data is presented in Table 2. This
+                             process can be segmented into two parts: the reorganization of EV charging data and the preparation of other
+                             influential factors.
+
+                             EV charging data. The raw charging data, obtained from publicly available EV charging services, pertains to
+                             charging stations and predominantly comprises string-type records at a 5-minute interval. To transform this raw
+                             data into a structured time series tailored for prediction tasks, we implement the following three key measures:
+
+                             •     Initial Extraction. From the string-type records, we extract vital information for each charging pile, such
+                                   as availability (designated as “busy” or “idle”), rated power, and the corresponding charging and service fees
+                                   applicable during the observed time periods. First, a charging pile is categorized as “active charging” if its
+                                   states at two consecutive timestamps are both “busy”. Consequently, the occupancy within a charging station
+                                   can be defined as the count of in-use charging piles, while the charging duration is calculated as the product
+                                   of the count of in-use piles and the time between the two timestamps (in our case, 5 minutes). Moreover, the
+                                   charging volume in a station can correspondingly be estimated by multiplying the duration by the piles’ rated
+                                   power. Finally, the average electricity price and service price are calculated for each station in alignment with
+                                   the same temporal resolution as the three charging variables.
+                             •     Error Detection and Imputation. Data quality is crucial for decision-making, advanced analytics, and
+                                   machine learning. Inaccuracies, often referred to as dirty data, can significantly undermine the reliability
+                                   of analysis or modeling efforts35. To improve the quality of our charging data, we identified several errors,
+                                   notably negative values for charging fees and inconsistencies between counts of occupied, idle, and total
+                                   charging piles. Records containing these anomalies were removed and treated as missing data. A two-step
+                                   imputation process was employed for missing values: forward filling replaced missing values using preceding
+                                   timestamps, followed by backward filling to fill gaps at the beginning of each time series. Additionally, out-
+                                   liers, which could significantly impact prediction performance, were detected using the interquartile range
+                                   (IQR) method36 for metrics such as charging volume (v), charging duration (d), and the rate of active charging
+                                   piles (o). To retain more original data and minimize the impact of outlier correction, we set the coefficient
+                                   to 4, instead of the default 1.5. Each outlier was then replaced with the mean of its adjacent valid values. This
+                                   preprocessing pipeline transformed the raw data into a structured and analyzable dataset.
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                        4
+www.nature.com/scientificdata/                                                                         www.nature.com/scientificdata
+
+
+                             •   Aggregation and Filtration. Building upon the station-level charging data that has been extracted and
+                                 cleansed, we further organize the data into a region-level dataset with an hourly interval providing a new per-
+                                 spective for EV charging behavior analysis. This is achieved by two major processes: aggregation and filtration.
+                                 First, we aggregate all the charging data from both temporal and spatial views: a. Temporally, we standardize
+                                 all time-series data to a common time resolution of one hour, as it serves as the least common denominator
+                                 among the various resolutions. This aims to establish a unified temporal resolution for all time-series data,
+                                 including pricing schemes, weather records, and charging data, thereby creating a well-structured dataset.
+                                 Aggregation rules specify that the five-minute charging volume (v) and duration (d) are summed within each
+                                 interval (i.e., one hour), whereas the occupancy (o), electricity price (pe), and service price (ps) are assigned
+                                 specific values at certain hours for each charging pile. This distinction arises from the inherent nature of these
+                                 data types: volume (v) and duration (d) are cumulative, while (o), (pe), and (ps) are instantaneous variables.
+                                 Compared to using the mean or median values within each interval, selecting the instantaneous values of (o),
+                                 (pe), and (ps) as representatives preserves the original data patterns more effectively and minimizes the influ-
+                                 ence of human interpretation. b. Spatially, stations and piles are aggregated based on the traffic zones delin-
+                                 eated by the sixth Residential Travel Survey of Shenzhen34. After aggregation, the resulting dataset includes
+                                 331 regions (also referred to as traffic zones) and 4344 timestamps. Variance tests and zero-value filtering
+                                 were then applied to exclude regions with negligible or no variation in charging data. Specifically, regions
+                                 with an occupancy variance below 0.001 or with more than 30% zero values were removed. As a result, 275
+                                 traffic zones, comprising 1,362 charging stations and 17,532 charging piles, were retained for further analysis,
+                                 as depicted in Fig. 2.
+
+
+                             Other influential factors. Apart from the EV charging data, we also constructed a set of variables that might
+                             influence charging behaviors37,38. These variables can be categorized into three classes, namely temporal factors,
+                             spatial attributes, and static features. First and foremost, the temporal factors include three weather conditions:
+                             air temperature (Ta), relative humidity (h), and atmospheric pressure (P). The raw weather data is collected from
+                             two meteorological observatories located in the airport and central regions of Shenzhen, and they were further
+                             organized into numeric data with the same hourly interval as the structured charging data. Notably, weather
+                             data is shared across all charging stations and traffic zones. Spatial information, including the adjacency matrix
+                             and distances, is computed using ArcGIS tools. Specifically, adjacency is determined by evaluating whether two
+                             traffic zones share a boundary, based on the distance between their geometric centers. Additionally, UrbanEV
+                             provides static features, such as Points of Interest (POI), area, and road length for each traffic zone. Only those
+                             relevant to charging activities within the 275 selected zones, aligned with the structured charging data, are
+                             retained.
+
+                             Data Records
+                             To enable further in-depth predictive analyses by researchers, the 1-hour resolution region-level dataset is pro-
+                             vided as the primary dataset, with the 5-minute resolution version also made available in the Dryad repository39,
+                             offering comprehensive access to time-series data at varying granularities. For consistency, all data are stored
+                             as comma-separated value (.csv) files along with their corresponding header descriptions stored in .txt files.
+                             Moreover, this dataset provides the geometry information of the studied areas in ArcGIS format (e.g., .shp, shx,
+                             and .dbf files). Lastly, we have developed a benchmarking code framework for EV charging forecasting, compris-
+                             ing program files or scripts written in Python (.py). Here is a detailed overview of these files:
+
+                             •   (occupancy.csv, duration.csv, and volume.csv) provide the EV charging occupancy ratio, duration, and volume,
+                                 in the studied areas, measured in %, hours, and kWh, respectively. The volume in volume.csv is derived from
+                                 the rated power of charging piles and may deviate from actual charging volumes. Nevertheless, it serves as the
+                                 foundation for validation in subsequent analyses, with volume-11kW.csv providing a vehicle-side estimation
+                                 as an alternative.
+                             •   (e_price.csv, s_price.csv) describe the electricity price and service fee, respectively, with a granularity of hour.
+                                 Both of them are units in Yuan/hour.
+                             •   (weather_central.csv and weather_airport.csv) store the weather data obtained from two different meteorolog-
+                                 ical stations located in the central area and the airport of Shenzhen city, respectively. Their header informa-
+                                 tion is presented in the file titled weather_header.txt.
+                             •   (Shenzhen.shp, Shenzhen.shx, Shenzhen.dbf) store geographic information in Shenzhen city in ArcGIS format,
+                                 using the WGS 1984 Albers projected coordinate system.
+                             •   (adj.csv, distance.csv) depict the adjacency relationships between traffic zones, along with their respective dis-
+                                 tances. The distances are computed as the Euclidean distance between the centroids of the zones, measured in
+                                 meters. In the adjacency file, a value of 1 indicates that two traffic zones are adjacent, otherwise 0.
+                             •   (inf.csv) contains several basis information for each zone, including pile capacity, longitude, latitude, the area
+                                 and perimeters of the zone (in meters).
+                             •   (poi.csv) contains information about Points of Interest throughout the studied city, collected in December
+                                 2022.
+                             •   (volume-11kW.csv) provides an alternative vehicle-side estimation of charging volume to mitigate potential
+                                 overestimation in volume.csv. Specifically, for direct current charging stations, the volume is calculated using
+                                 the standard power of the most commonly used electric vehicle, Tesla Model Y (11kW), instead of the rated
+                                 power of the charging pile.
+                             •   (main.py, models.py, utils.py, preprocessing.py) are the code files used in this work.
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                     5
+www.nature.com/scientificdata/                                                                      www.nature.com/scientificdata
+
+
+                             Technical Validation
+                             In order to validate UrbanEV’s efficacy in EV charging demand prediction, we are conducting a comprehensive
+                             benchmarking test covering forecasting methods specifically designed for EV charging demand as well as meth-
+                             ods supporting general time-series forecasting tasks. It is noted that the validation relies on a one-hour resolu-
+                             tion dataset. Through a thorough comparison and analysis of these baselines, we seek to address three crucial
+                             questions: First, Q1: Does the dataset effectively capture the temporal patterns in EV charging behaviors? Second,
+                             Q2: Can UrbanEV accurately depict the spatial interplay among different areas? Finally, Q3: Are the identified
+                             correlated factors instrumental in enhancing prediction accuracy?
+                                 In this validation, we compare three traditional forecasting methods, five deep learning models, and two
+                             state-of-the-art Transformer-based predictors. The three conventional models include the last observation (LO),
+                             Auto-regressive (AR), and Auto-regressive Integrated Moving Average(ARIMA) model. The six deep learning
+                             models are listed as follows: a fully connected neural network (FCNN) is a classical network that has been used
+                             to capture the non-linearity in time series; Long Short-Term Memory (LSTM), a representative recurrent neural
+                             network, has been recently utilized for predicting electric vehicle charging demand22,40; Graph Convolutional
+                             Network (GCN), a typical graph learning model, has also been employed for electric vehicle (EV) forecast-
+                             ing tasks24. Expanding on the aforementioned achievements, there has been a recent integration of graph and
+                             recurrent models to enhance predictive performance for EV charging demand. Accordingly, GCN-LSTM41 as
+                             a hybrid model is included in the evaluation. Moreover, one advanced time-series forecasting method, namely
+                             the Attention-Based Spatial-Temporal Graph Convolutional Network (ASTGCN)42, is utilized as well in our
+                             study. Lastly, we evaluate two Transformer-based forecasting Models in our investigation, i.e., TimeNet43, and
+                             TimeXer44. Comparing and analyzing the performance of these baselines can assist us in evaluating whether
+                             UrbanEV can act as a competitive benchmark dataset for EV charging prediction tasks. This validation employed
+                             time-series cross-validation to address the temporal characteristics of a six-month dataset, which, accordingly,
+                             supports a six-fold approach. Specifically, each fold incrementally included one additional month of data, with
+                             80% allocated to training and the remaining 20% equally divided between validation and testing sets. Model per-
+                             formance was assessed using four complementary metrics45,46: 1) Root Mean Squared Error (RMSE), 2) Mean
+                             Absolute Percentage Error (MAPE), 3) Relative Absolute Error (RAE), and 4) Mean Absolute Error (MAE).
+                             Finally, the evaluation objective is established as the distribution prediction (spatial-temporal prediction) for
+                             EV charging data, supplemented by experiments on node prediction to answer, and insights gained from the
+                             factorial experiment.
+
+                             Distribution Prediction. The results presented in Table 3 reveal several key observations regarding the pre-
+                             dictive performance across different models. The performance can be categorized into three distinct categories,
+                             consistent with the baseline model classification.
+                                 1) Statistical Models: This category includes models such as LO, AR, and ARIMA, which rely on simple
+                             linear transformations to capture temporal dynamics. These models are computationally efficient due to their
+                             simplicity but exhibit limited predictive accuracy compared to more advanced approaches. Their inability to
+                             model complex nonlinear patterns in the data constrains their utility in scenarios requiring high precision.
+                                 2) Conventional Deep Learning Models: The second category encompasses models like Fully Connected
+                             Neural Networks (FCNN), Long Short-Term Memory (LSTM) networks, and Graph Convolutional Networks
+                             (GCN). These models incorporate nonlinear temporal modeling capabilities, leading to significant improve-
+                             ments in predictive accuracy over statistical methods. Additionally, leveraging spatial information-such as
+                             using the charging demand from surrounding regions-further enhances prediction performance. Models like
+                             GCN-LSTM and ASTGCN demonstrate the benefits of joint spatiotemporal feature modeling, achieving supe-
+                             rior results by capturing complex dependencies across both dimensions.
+                                 3) Transformer-Based Models: Representing the highest-performing category, Transformer-based architec-
+                             tures dynamically capture intricate spatiotemporal interactions, effectively addressing limitations observed in
+                             other methods. By leveraging attention mechanisms, these models exhibit a transformative potential for spatio-
+                             temporal prediction tasks, delivering state-of-the-art performance. Their ability to adaptively focus on relevant
+                             temporal and spatial features provides a robust framework for capturing the nuanced dynamics of EV charging
+                             demand.
+                                 These findings underscore the pivotal role of accurately extracting temporal and spatial features to enhance
+                             forecasting accuracy. More importantly, the results demonstrate that the dataset exhibits pronounced spati-
+                             otemporal characteristics, and the application of nonlinear modeling techniques proves effective in predict-
+                             ing EV charging-related metrics. Compared to independently modeling temporal or spatial features, the joint
+                             modeling of spatiotemporal features significantly improves predictive performance. However, the performance
+                             differences among various spatiotemporal prediction models highlight the inherent complexity of the dataset’s
+                             spatiotemporal characteristics. This complexity necessitates the design of specialized models tailored to capture
+                             these intricate patterns effectively. Hence, we advocate for a deeper investigation into spatiotemporal forecasting
+                             models to unveil the underlying patterns in EV charging behaviors within the UrbanEV dataset.
+
+                             Node Prediction. The results presented in Table 4 highlight the performance of various models across three
+                             key metrics-charging occupancy (o), duration (d), and volume (v). First, the Transformer-based model, TimeXer,
+                             demonstrates superior performance among the models evaluated, achieving the lowest RMSE, MAPE, RAE, and
+                             MAE values across all metrics. Specifically, it achieves an RMSE of 0.07 for o, 2.73 for d, and 43.66 for v, signif-
+                             icantly outperforming traditional statistical models (e.g., LO, AR, ARIMA) and deep learning methods (e.g.,
+                             FCNN, LSTM). Second, the recurrent model, LSTM, shows competitive results to TimeXer for charging duration
+                             d and volume v and outperforms other compared models in most cases. These two observations indicate that the
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                 6
+www.nature.com/scientificdata/                                                                                                     www.nature.com/scientificdata
+
+
+                                          RMSE(×10−2)                                           MAPE(%)
+                              Model       3h      6h       9h          12h         Average 3h                  6h          9h      12h     Average
+                              LO          9.75    12.52    14.65       15.45       13.09        25.39          39.07       50.92   56.70   43.02
+                              AR          13.08   13.00    12.89       12.67       12.91        58.30          59.12       60.93   61.74   60.02
+                              ARIMA       13.76   13.88    13.44       12.79       13.47        58.63          58.89       59.56   59.10   59.05
+                              FCNN        9.47    10.74    10.95       9.79        10.24        40.59          50.12       52.67   46.22   47.40
+                              LSTM        9.37    10.96    11.05       9.74        10.28        36.17          46.44       49.81   43.54   43.99
+                              GCN         8.91    10.63    10.93       10.08       10.14        39.93          50.32       51.76   46.92   47.23
+                              GCNLSTM     8.41    9.67     10.65       9.39        9.53         35.96          45.01       50.12   43.26   43.59
+                              ASTGCN      9.15    10.61    10.92       9.83        10.13        35.67          46.02       49.37   47.52   44.64
+                              TimesNet    9.00    9.59     9.92        9.64        9.54         31.65          35.19       37.58   36.37   35.20
+                              TimeXer     8.32    9.38     9.89        9.39        9.24         26.13          33.20       36.47   35.14   32.74
+
+                                          RAE( × 10−2)                                                  MAE( × 10−2)
+                              Model       3h       6h          9h          12h          Average         3h          6h      9h     12h     Average
+                              LO          36.62    54.05       68.08       74.05        58.20           4.91        7.26    9.17   9.98    7.83
+                              AR          67.54    67.07       66.66       65.65        66.73           8.99        8.98    8.96   8.83    8.94
+                              ARIMA       70.82    70.90       69.21       65.78        69.18           9.46        9.52    9.31   8.84    9.28
+                              FCNN        45.62    54.62       56.02       49.08        51.34           6.11        7.33    7.54   6.62    6.90
+                              LSTM        43.51    54.57       55.85       48.27        50.55           5.82        7.32    7.52   6.50    6.79
+                              GCN         45.61    55.69       57.34       52.64        52.82           6.11        7.48    7.73   7.11    7.11
+                              GCNLSTM     41.79    50.13       55.86       48.12        48.97           5.59        6.73    7.52   6.48    6.58
+                              ASTGCN      42.70    52.90       55.32       49.91        50.21           5.71        7.10    7.45   6.73    6.75
+                              TimesNet    40.78    45.05       47.28       45.86        44.74           5.48        6.03    6.31   6.12    5.99
+                              TimeXer     35.01    42.24       46.43       44.12        41.95           4.71        5.66    6.20   5.89    5.61
+
+                             Table 3. Performance comparison of representative forecasting methods on the spatial-temporal occupancy
+                             prediction task using the UrbanEV dataset. The result showcases that models incorporating both spatial and
+                             temporal patterns can achieve superior predictive accuracy. This observation suggests that the UrbanEV dataset
+                             exhibits pronounced spatiotemporal dependencies within EV charging data. The best and second best results in
+                             each column are marked by Bold and underlined, respectively.
+
+
+                                          RMSE                             MAPE
+                              Model       o       d        v               o            d           v
+                              LO          0.10    4.35     68.53           0.41         0.57        0.58
+                              AR          0.08    5.60     74.29           0.11         0.89        0.88
+                              ARIMA       0.13    5.86     76.41           0.59         0.89        0.89
+                              FCNN        0.11    3.62     55.52           0.54         0.56        0.57
+                              LSTM        0.09    3.20     45.14           0.46         0.52        0.52
+                              TimeXer     0.07    2.73     43.66           0.29         0.55        0.66
+
+                                          RAE                          MAE
+                              Model       o       d        v           o            d           v
+                              LO          0.79    0.78     0.78        0.07         3.17        51.71
+                              AR          1.06    1.07     1.07        0.07         4.51        59.18
+                              ARIMA       1.10    1.09     1.09        0.10         4.67        63.81
+                              FCNN        1.05    0.78     0.79        0.09         2.89        44.44
+                              LSTM        0.92    0.72     0.71        0.07         2.48        34.12
+                              TimeXer     0.76    0.70     0.71        0.05         2.04        33.81
+
+                             Table 4. Performance comparison of six representative forecasting methods in node prediction. It is evident
+                             that the Transformer-based model, TimeXer, and the RNN-based model, LSTM, stand out with superior
+                             performance. This observation indicates that the charging data offered by UrbanEV encompasses ample
+                             temporal features. The best and second best results in each column are marked by Bold and underlined,
+                             respectively.
+
+
+
+                             UrbanEV dataset can serve as a suitable and trustworthy benchmark dataset for EV charging prediction, as the
+                             compared models are appropriately ranked: namely, TimeXer > LSTM > others.
+
+                             Factorial experiment. To investigate the influence of the five features mentioned above both individ-
+                             ually and in combination, we conducted factorial experiments in various feature groups, including pairwise
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                                     7
+www.nature.com/scientificdata/                                                                          www.nature.com/scientificdata
+
+
+                                          RMSE(×10−2)                                           MAPE(%)
+                              Model       FCNN     LSTM      ASTGCN      TimeXer     Average    FCNN      LSTM     ASTGCN      TimeXer      Average
+                              None        9.47     9.37      9.15        7.95        8.99       40.59     36.17    35.67       24.81        34.31
+                              P           9.59     9.25      8.96        8.41        9.05       39.24     35.77    32.57       26.19        33.44
+                              Ta          9.48     9.28      8.87        8.47        9.02       36.32     34.88    32.41       27.06        32.67
+                              h           9.44     9.23      8.98        8.48        9.03       38.70     34.62    32.41       26.97        33.18
+                              pe          9.80     9.19      8.91        8.50        9.10       39.19     35.68    33.08       27.77        33.93
+                              ps          9.86     9.21      8.97        8.69        9.18       39.80     35.75    32.20       28.39        34.04
+                              P + ps      9.23     9.03      9.03        8.47        8.94       37.25     34.08    32.86       26.45        32.66
+                              Ta + pe     9.12     9.03      8.88        8.51        8.88       36.07     34.16    33.29       26.46        32.50
+                              h + Ta      9.20     9.09      9.04        8.59        8.98       36.58     33.42    34.78       26.57        32.84
+                              ps + p e    9.24     9.02      8.93        8.49        8.92       38.05     35.26    33.22       26.60        33.28
+                              all         9.12     9.11      9.22        8.63        9.02       36.87     36.21    39.09       27.44        34.91
+
+                                          RAE(×10 )−2
+                                                                                                 MAE(×10 )−2
+
+
+                              Model       FCNN      LSTM     ASTGCN      TimeXer      Average    FCNN     LSTM     ASTGCN      TimeXer      Average
+                              None        45.62     43.51    42.70       32.53        41.09      6.11     5.82     5.71        4.37         5.50
+                              P           46.08     42.76    40.81       35.51        41.29      6.17     5.72     5.46        4.78         5.53
+                              Ta          45.06     43.16    40.22       35.65        41.02      6.04     5.77     5.38        4.80         5.50
+                              h           45.07     42.37    40.64       35.58        40.92      6.03     5.67     5.43        4.81         5.49
+                              pe          47.41     42.83    40.75       35.31        41.57      6.34     5.73     5.45        4.78         5.58
+                              ps          47.58     42.96    40.59       36.15        41.82      6.37     5.74     5.43        4.90         5.61
+                              P + ps      43.84     41.64    41.43       36.01        40.73      5.87     5.57     5.54        4.85         5.46
+                              Ta + p e    43.01     41.80    41.04       35.96        40.45      5.75     5.59     5.49        4.84         5.42
+                              h + Ta      43.52     41.65    41.62       36.04        40.71      5.82     5.58     5.57        4.87         5.46
+                              ps + pe     44.18     41.92    41.03       34.86        40.50      5.91     5.61     5.49        4.72         5.43
+                              all         43.37     43.18    46.13       35.92        42.15      5.80     5.78     6.17        4.86         5.65
+
+                             Table 5. Results of factorial experiments with ten factorial groups on EV charging demand. Utilizing the
+                             occupancy ratio in each traffic zone as the target data, our analysis indicates that individual features make
+                             a minimal contribution to prediction accuracy, and may even hinder performance in certain scenarios.
+                             In contrast, the combination of features, notably air temperature (Ta) and electricity price (pe), can lead to
+                             significant enhancements. The best and second best results in each column are marked by Bold and underlined,
+                             respectively.
+
+
+
+                             combinations (i.e., P + ps, Ta + pe, h + Ta, and ps + pe) to assess whether joint factors affect charging occupancy.
+                             Additionally, we integrated all five features to explore whether the collective effect of external factors exhibits
+                             consistent influences on o. First, as presented in Table 5, it indicates that the inclusion of individual features yields
+                             minimal improvement in predicting EV charging demand and, in some cases, even deteriorates the prediction
+                             accuracy. However, combinations of features prove to be significantly more effective in enhancing demand fore-
+                             casting. Notably, pairings that include pe and ps, such as Ta + pe and ps + pe, demonstrate the strongest auxiliary
+                             effects on prediction accuracy. This suggests that external factors like temperature and current charging costs
+                             influence users’ charging decisions. For example, extreme temperatures-whether hot or cold-reduce the likeli-
+                             hood of travel, subsequently lowering the demand for charging. Similarly, elevated electricity prices or service fees
+                             may prompt users to either seek alternative charging stations or forgo charging altogether.
+                                 Second, it can be observed that the combination of pe and ps is particularly impactful, as these factors col-
+                             lectively represent the total cost incurred during charging. The interplay between these two features effectively
+                             captures the influence of charging costs on user behavior, which cannot be fully captured by either feature alone.
+                             Consequently, the joint variation of pe and ps reflects users’ sensitivity to charging costs, making it a superior
+                             predictor compared to single-factor variations.
+                                 Finally, integrating all five features to assist in predicting o does not necessarily improve the prediction accu-
+                             racy. Although these features encompass various dimensions, such as weather conditions and price fluctuations,
+                             providing diverse information, the prediction performance can deteriorate if the model fails to effectively pro-
+                             cess these inputs. This highlights the importance and potential of developing advanced prediction models capa-
+                             ble of handling multidimensional auxiliary information to further enhance forecasting accuracy.
+
+                             Code availability
+                             Our code used in this paper for the dataset setup, data analysis, and experiments can be found in a GitHub
+                             repository at (https://github.com/IntelligentSystemsLab/UrbanEV).
+
+                             Received: 29 January 2025; Accepted: 20 March 2025;
+                             Published: xx xx xxxx
+
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                        8
+www.nature.com/scientificdata/                                                                                       www.nature.com/scientificdata
+
+
+                             References
+                              1. Tran, M., Banister, D., Bishop, J. D. & McCulloch, M. D. Realizing the electric-vehicle revolution. Nature climate change 2, 328–333
+                                 (2012).
+                              2. Crabtree, G. The coming electric vehicle transformation. Science 366, 422–424 (2019).
+                              3. Agency, I. E. Global ev outlook 2024, https://www.iea.org/reports/global-ev-outlook-2024 (2024).
+                              4. Pal, A., Bhattacharya, A. & Chakraborty, A. K. Planning of ev charging station with distribution network expansion considering
+                                 traffic congestion and uncertainties. IEEE Transactions on Industry Applications 59, 3810–3825 (2023).
+                              5. Hussain, M. T., Sulaiman, N. B., Hussain, M. S. & Jabir, M. Optimal management strategies to solve issues of grid having electric
+                                 vehicles (ev): A review. Journal of Energy Storage 33, 102114 (2021).
+                              6. Muratori, M. Impact of uncoordinated plug-in electric vehicle charging on residential power demand. Nature Energy 3, 193–201
+                                 (2018).
+                              7. Chen, Q. et al. Afml: An asynchronous federated meta-learning mechanism for charging station occupancy prediction with biased
+                                 and isolated data. IEEE Transactions on Big Data 1–16, https://doi.org/10.1109/TBDATA.2024.3484651 (2024).
+                              8. You, L. et al. Fmgcn: Federated meta learning-augmented graph convolutional network for ev charging demand forecasting. IEEE
+                                 Internet of Things Journal 11, 24452–24466, https://doi.org/10.1109/JIOT.2024.3369655 (2024).
+                              9. Al-Ogaili, A. S. et al. Review on scheduling, clustering, and forecasting strategies for controlling electric vehicle charging: Challenges
+                                 and recommendations. Ieee Access 7, 128353–128371 (2019).
+                             10. Vandet, C. A. & Rich, J. Optimal placement and sizing of charging infrastructure for evs under information-sharing. Technological
+                                 Forecasting and Social Change 187, 122205 (2023).
+                             11. Gaete-Morales, C., Kramer, H., Schill, W.-P. & Zerrahn, A. An open tool for creating battery-electric vehicle time series from
+                                 empirical data, emobpy. Scientific data 8, 152 (2021).
+                             12. Barbar, M., Mallapragada, D. S., Alsup, M. & Stoner, R. Scenarios of future indian electricity demand accounting for space cooling
+                                 and electric vehicle adoption. Scientific Data 8, 178 (2021).
+                             13. Zhao, Z. & Lee, C. K. Dynamic pricing for ev charging stations: A deep reinforcement learning approach. IEEE Transactions on
+                                 Transportation Electrification 8, 2456–2468 (2021).
+                             14. Aveklouris, A., Vlasiou, M. & Zwart, B. A stochastic resource-sharing network for electric vehicle charging. IEEE Transactions on
+                                 Control of Network Systems 6, 1050–1061 (2019).
+                             15. Ji, N., Zhu, R., Huang, Z. & You, L. An urban-scale spatiotemporal optimization of rooftop photovoltaic charging of electric vehicles.
+                                 Urban Informatics 3, 4, https://doi.org/10.1007/s44212-023-00031-7 (2024).
+                             16. Liu, S. et al. Reservation-based ev charging recommendation concerning charging urgency policy. Sustainable Cities and Society 74,
+                                 103150 (2021).
+                             17. Zhang, X. et al. Deep-learning-based probabilistic forecasting of electric vehicle charging load with a novel queuing model. IEEE
+                                 transactions on cybernetics 51, 3157–3170 (2020).
+                             18. Yaghoubi, E., Yaghoubi, E., Khamees, A., Razmi, D. & Lu, T. A systematic review and meta-analysis of machine learning, deep
+                                 learning, and ensemble learning approaches in predicting ev charging behavior. Engineering Applications of Artificial Intelligence
+                                 135, 108789 (2024).
+                             19. Akshay, K., Grace, G. H., Gunasekaran, K. & Samikannu, R. Power consumption prediction for electric vehicle charging stations and
+                                 forecasting income. Scientific Reports 14, 6497 (2024).
+                             20. Yi, Z., Liu, X. C., Wei, R., Chen, X. & Dai, J. Electric vehicle charging demand forecasting using deep learning model. Journal of
+                                 Intelligent Transportation Systems 26, 690–703 (2022).
+                             21. Qu, H., Kuang, H., Wang, Q., Li, J. & You, L. A physics-informed and attention-based graph learning approach for regional electric
+                                 vehicle charging demand prediction. IEEE Transactions on Intelligent Transportation Systems (2024).
+                             22. Wang, S. et al. Short-term electric vehicle charging demand prediction: A deep learning approach. Applied Energy 340, 121032
+                                 (2023).
+                             23. Kuang, H. et al. Unraveling the effect of electricity price on electric vehicle charging behavior: A case study in shenzhen, china.
+                                 Sustainable Cities and Society 115, 105836 (2024).
+                             24. Wang, S., Chen, A., Wang, P. & Zhuge, C. Predicting electric vehicle charging demand using a heterogeneous spatio-temporal graph
+                                 convolutional network. Transportation Research Part C: Emerging Technologies 153, 104205 (2023).
+                             25. Qu, H. et al. Chatev: Predicting electric vehicle charging demand as natural language processing. Transportation Research Part D:
+                                 Transport and Environment 136, 104470 (2024).
+                             26. Orzechowski, A. et al. A data-driven framework for medium-term electric vehicle charging demand forecasting. Energy and AI 14,
+                                 100267 (2023).
+                             27. Team, O.-D. Electric vehicle charging station usage. Perth and Kinross Open Data https://data.pkc.gov.uk/ (2020).
+                             28. Lee, Z. J., Li, T. & Low, S. H. ACN-Data: Analysis and Applications of an Open EV Charging Dataset. In Proceedings of the Tenth
+                                 International Conference on Future Energy Systems, e-Energy ’19, https://ev.caltech.edu/dataset (2019).
+                             29. Obusevs, A., Domenico, D. D. & Korba, P. One year recordings of electric vehicle charging fleet. IEEE Dataport https://
+                                 doi.org/10.21227/fkap-fr63 (2021).
+                             30. Baek, K., Lee, E. & Kim, J. A dataset for multi-faceted analysis of electric vehicle charging transactions. Figshare https://
+                                 doi.org/10.6084/m9.figshare.22495141.v1 (2023).
+                             31. Baek, K., Lee, E. & Kim, J. A dataset for multi-faceted analysis of electric vehicle charging transactions. Scientific Data 11, 262 (2024).
+                             32. Asensio, O. I., Lawson, M. C. & Apablaza, C. Z. Electric vehicle charging stations in the workplace with high-resolution data from
+                                 casual and habitual users. Scientific Data 8, 168 (2021).
+                             33. Asensio, O. I., Lawson, M. C. & Apablaza, C. Z. High-resolution electric vehicle charging data from a workplace setting. Harvard
+                                 Dataverse https://doi.org/10.7910/DVN/QF1PMO (2021).
+                             34. Zhou, J. & Ma, L. Analysis on the evolution characteristics of shenzhen residents? travel structure and the enlightenment of public
+                                 transport development policy. Urban Mass Transit 24, 63–68, https://doi.org/10.16037/j.1007-869x.2021.07.014 (2021).
+                             35. Chu, X., Ilyas, I. F., Krishnan, S. & Wang, J. Data cleaning: Overview and emerging challenges. In Proceedings of the 2016
+                                 international conference on management of data, 2201–2206 (Association for Computing Machinery, New York, NY, USA, 2016).
+                             36. Nouvellet, P. et al. Reduction in mobility and covid-19 transmission. Nature communications 12, 1–9 (2021).
+                             37. Zhu, R. et al. Multi-sourced data modelling of spatially heterogenous life-cycle carbon mitigation from installed rooftop
+                                 photovoltaics: A case study in singapore. Applied Energy 362, 122957, https://doi.org/10.1016/j.apenergy.2024.122957 (2024).
+                             38. Schober, P., Boer, C. & Schwarte, L. A. Correlation coefficients: appropriate use and interpretation. Anesthesia & analgesia 126,
+                                 1763–1768 (2018).
+                             39. Li, H. et al. UrbanEV: An open benchmark dataset for urban electric vehicle charging demand prediction. Dryad https://
+                                 doi.org/10.5061/dryad.np5hqc04z (2025).
+                             40. Shanmuganathan, J., Victoire, A. A., Balraj, G. & Victoire, A. Deep learning lstm recurrent neural network model for prediction of
+                                 electric vehicle charging demand. Sustainability 14, 10207 (2022).
+                             41. Kim, H. J. & Kim, M. K. Spatial-temporal graph convolutional-based recurrent network for electric vehicle charging stations
+                                 demand forecasting in energy market. IEEE Transactions on Smart Grid 15, 3979–3993, https://doi.org/10.1109/TSG.2024.3368419
+                                 (2024).
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                                            9
+www.nature.com/scientificdata/                                                                                   www.nature.com/scientificdata
+
+
+                             42. Guo, S., Lin, Y., Feng, N., Song, C. & Wan, H. Attention based spatial-temporal graph convolutional networks for traffic flow
+                                 forecasting. In Proceedings of the AAAI conference on artificial intelligence, vol. 33, 922–929 (2019).
+                             43. Wu, H. et al. Timesnet: Temporal 2d-variation modeling for general time series analysis. In Proceedings of the Eleventh International
+                                 Conference on Learning Representations (2023).
+                             44. Wang, Y. et al. Timexer: Empowering transformers for time series forecasting with exogenous variables. In Proceedings of the Thirty-
+                                 eighth Annual Conference on Neural Information Processing Systems(2024).
+                             45. Li, J., Qu, H. & You, L. An integrated approach for the near real-time parking occupancy prediction. IEEE Transactions on Intelligent
+                                 Transportation Systems 24, 3769–3778 (2022).
+                             46. Esling, P. & Agon, C. Time-series data mining. ACM Computing Surveys (CSUR) 45, 1–34 (2012).
+
+                             Acknowledgements
+                             This work was supported in part by the National Key Research and Development Program of China
+                             (2023YFB4301900), Research Funds from the Department of Science and Technology of Guangdong Province
+                             (2021QN02S161), and the GuangDong Basic and Applied Basic Research Foundation (2023A1515012895).”
+                             Thank you for your time and support.
+
+                             Author contributions
+                             L.Y. and H.Q. conceived the experiment(s), H.L. conducted the experiment(s), and H.Q. and H.L. analyzed the
+                             results. X.T. and R.Z. reviewed the manuscript and participated actively in its editing. All authors contributed to
+                             the development of the manuscript and provided their approval for the final version.
+
+                             Competing interests
+                             The authors declare no competing interests.
+
+                             Additional information
+                             Correspondence and requests for materials should be addressed to L.Y.
+                             Reprints and permissions information is available at www.nature.com/reprints.
+                             Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and
+                             institutional affiliations.
+                                          Open Access This article is licensed under a Creative Commons Attribution-NonCommercial-
+                                          NoDerivatives 4.0 International License, which permits any non-commercial use, sharing, distribu-
+                             tion and reproduction in any medium or format, as long as you give appropriate credit to the original author(s)
+                             and the source, provide a link to the Creative Commons licence, and indicate if you modified the licensed mate-
+                             rial. You do not have permission under this licence to share adapted material derived from this article or parts of
+                             it. The images or other third party material in this article are included in the article’s Creative Commons licence,
+                             unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative
+                             Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted
+                             use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit
+                             http://creativecommons.org/licenses/by-nc-nd/4.0/.
+
+                             © The Author(s) 2025
+
+
+
+
+Scientific Data |   (2025) 12:523 | https://doi.org/10.1038/s41597-025-04874-4                                                                                    10
+

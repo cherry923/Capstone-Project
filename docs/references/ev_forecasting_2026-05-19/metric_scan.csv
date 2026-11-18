@@ -1,0 +1,12 @@
+file,WAPE,MAPE,sMAPE,SMAPE,RMSE,MAE,MSE,NRMSE,NMAE,PICP,Pinball,CRPS,RAE,Accuracy,R2,R2_unicode
+2019_zhu_ev_charging_load_forecasting_deep_learning_energies,0,3,0,0,17,20,17,0,0,0,0,0,0,11,17,0
+2021_huttel_deep_spatiotemporal_ev_charging_arxiv2106_10940,0,0,0,0,3,0,3,0,0,0,0,0,0,1,0,0
+2022_li_probabilistic_charging_power_rl_arxiv2204_07905,0,0,0,0,0,0,1,0,0,0,20,19,0,6,0,0
+2023_xue_ast_gin_station_availability_sensors,0,0,0,0,6,6,6,0,0,0,0,0,0,15,6,0
+2024_ali_location_probabilistic_mq_tcn_arxiv2409_11862,0,0,0,0,1,0,1,0,0,31,10,0,0,12,0,1
+2024_gunasekaran_egru_rkoa_gcn_discover_applied_sciences,0,0,0,0,31,45,52,0,0,0,0,0,0,27,10,0
+2024_wstgcn_ev_charging_load_prediction_energies,0,0,0,0,9,9,9,0,0,0,0,0,0,16,0,0
+2024_zheng_coherent_hierarchical_probabilistic_arxiv2411_00337,0,0,0,0,4,12,4,0,0,0,1,1,0,6,0,0
+2025_hussain_cat_former_scientific_reports,0,4,0,0,28,64,85,4,4,0,0,0,0,24,0,0
+2025_urbanev_open_benchmark_scientific_data,0,5,0,0,6,5,6,0,0,0,0,0,5,9,0,0
+2026_evformer_citywide_ev_charging_load_forecasting,0,19,0,0,23,11,23,0,0,0,0,0,0,18,0,0

@@ -1,0 +1,1322 @@
+                                                                                                      www.nature.com/scientificreports
+
+
+
+
+                OPEN              Short term demand forecasting of
+                                  electric vehicle charging stations
+                                  using context aware temporal
+                                  transformer model
+                                  Adil Hussain1, Qing-Chang Lu1, Sanam Shahla Rizvi2, Shixin Wang1 & Se Jin Kwon3
+                                  The growing number of electric vehicles (EVs) on the road poses great challenges to the power supply
+                                  and causes outages. Most existing research works focus on individual or aggregated charging station
+                                  data at the city level. However, charging behaviors at different city locations might demonstrate
+                                  different patterns and characteristics. This study proposed a Context-Aware Temporal Transformer
+                                  (CAT-Former) model using Temporal and Contextual features for short-term EV charging demand
+                                  forecasting of one hour and one day ahead using the public EV data from Boulder City, Colorado. The
+                                  temporal and contextual features are important features, which help the model to understand the
+                                  charging patterns of different periods over different locations. The charging data with different trends
+                                  is crucial to train and test the proposed model performance. Therefore, this study chose the three
+                                  locations with the highest number of sessions from the data. The performance of the proposed model,
+                                  as well as the baseline models, including LSTM, BiLSTM, and hybrid models such as CNN-LSTM and
+                                  CNN-BiLSTM, is assessed and compared using Mean Square Error (MSE) and Mean Absolute Error
+                                  (MAE) on three locations. The proposed model is compared to the Simple and Hybrid Transformer
+                                  models utilizing the LSTM-based Encoder-Decoder. The proposed model performed better than the
+                                  baseline models for one hour and one day ahead of forecasting for the selected locations by achieving
+                                  the lowest MSE and MAE values. The results show that the proposed CAT-Former model using
+                                  temporal and contextual features can effectively forecast the charging demand using charging data
+                                  from different locations for short-term periods, including one-hour and one-day ahead predictions.
+
+                                  Keywords Electric vehicles, Charging demand, Demand forecasting, CAT-Former, Charging stations
+
+                                  Electric Vehicles (EVs) are becoming one of the important ways to reduce carbon emissions1. This is because
+                                  they don’t produce any pollution and are very good at turning energy into electricity2,3. In many countries,
+                                  EVs have grown quickly over the past years4. Initially, the adoption EVs was discouraged due to the limitations
+                                  of their batteries and the high costs. However, there has been a considerable increase in the demand for EVs
+                                  due to growing concerns regarding global warming and environmental protection. EVs have seen substantial
+                                  improvements in dependability and efficiency due to the development of manufacturing and other critical
+                                  technologies associated with such developments. Therefore, numerous countries aim for substantial EV
+                                  penetration soon. Several challenges associated with EV batteries have been effectively resolved due to extensive
+                                  research and development. These improvements have made it possible for the EV market to compete with,
+                                  and sometimes even pass, the market for combustion-engine vehicles5. To promote the efficient use of EVs,
+                                  numerous governments have implemented policies, offered incentives, and promoted industry6,7. However,
+                                  several barriers continue to hinder the widespread adoption of EVs and charging infrastructures. Despite a
+                                  gradual decline in the cost of materials for Li-based batteries and improved battery performance for EVs, high
+                                  battery costs and restricted driving range are still significant obstacles8,9. Some other obstacles include new rapid
+                                  charging techniques, installing charging infrastructures at public locations, the prolonged charging range of
+                                  batteries, and limited accessibility. Furthermore, unlike internal combustion engine (ICE) vehicles, the rise in
+
+
+
+                                 1Department of Traffic Information and Control Engineering, School of Electronics and Control Engineering,
+
+                                 Chang’an University, Xi’an 710064, Shaanxi, China. 2Raptor Interactive (Pty) Ltd, Centurion 0157, South Africa.
+                                 3Department of Computer Science and Artificial Intelligence, Dongguk University, Seoul 04620, South Korea.
+                                 email: qclu@chd.edu.cn; skwon1109@gmail.com
+
+
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                   1
+www.nature.com/scientificreports/
+
+
+                                  EV usage adversely affects the electric grid by generating higher peak powers, frequency and voltage variations,
+                                  and an overall increase in energy consumption10.
+                                      Accurate load modeling and load forecasting are difficult to achieve due to the stochastic nature of the EV
+                                  charging demand, which is influenced by various factors. To improve the industrial and social economy while
+                                  lowering emissions of greenhouse gases, it is becoming increasingly important to operate transportation and
+                                  energy systems by supporting the growth of the energy-transportation nexus towards a future without carbon.
+                                  The distribution network’s stability is at risk from the increasing usage of EVs as renewable energy sources; hence,
+                                  an appropriate solution is urgently required. Therefore, the planning, scheduling, and operation of the power
+                                  system are greatly impacted by load predictions11. The accuracy of EV charging forecasts is critical to utilities’
+                                  decision-making and development processes. Implementing an efficient forecasting model could enhance the
+                                  accuracy of predictions for optimal dispatching, encourage the growth of EV charging infrastructure, and
+                                  provide manufacturers with a compelling reason to encourage the usage of EVs.
+                                      Current research on EV charging stations (EVCS) or EV charging demand forecasts can be categorized into
+                                  data-driven and model-based forecasts12. In contrast to residential load power and wind power predictions, which
+                                  are mostly affected by the surrounding environment and resident lifestyles, the first prediction form focuses on
+                                  EV users’ charging behavior. Statistical and machine learning algorithms are commonly used for load forecasting
+                                  methodologies covering EV charging demand13. Autoregressive (AR), Moving Average (MA), Autoregressive
+                                  Moving Average (ARMA), and Autoregressive Integrated Moving Average (ARIMA) are statistical time series
+                                  forecasting methods that are frequently employed for short-term load forecasting. These methods are based on
+                                  the assumption that forecasting data exhibits a linear correlation with historical load data. Consequently, they
+                                  are unable to accurately represent the nonlinear characteristics of the historical data that has been observed.
+                                  Deep neural networks and other machine learning methodologies are more effective than statistical models
+                                  in managing complex and non-linear data characteristics. In the process of load forecasting, the Support
+                                  Vector Machine (SVM) and Support Vector Regression (SVR) models are used14. To forecast EV charging
+                                  demand, advanced deep learning methodologies, such as Artificial Neural Networks (ANN), Convolutional
+                                  Neural Networks (CNN), and Recurrent Neural Networks (RNN), have been implemented, including their
+                                  ensembles. Several researchers have recently concentrated on developing load forecasting methods based on
+                                  deep learning15,16.
+                                      Most of the existing EV charging demand forecasts focus on single or aggregated charging stations (CSs)
+                                  demand forecasts; however, different charging locations in a city have different charging demands and grid loads.
+                                  The accuracy and performance of the model using different CS data need to be validated. The main contribution
+                                  of this work is the development of a Context-Aware Temporal Transformer (CAT-Former) model based on
+                                  Contextual and Temporal Features, which is implemented using a public dataset of Boulder City. Furthermore,
+                                  the proposed model is evaluated based on different charging locations within the city to analyze the performance
+                                  of different charging trends. The data used for the model training and testing are collected from multiple
+                                  locations selected, based on the highest number of charging sessions and high charging demand in the city. The
+                                  main contribution of this study is the proposed CAT-Former model, which utilizes the temporal and contextual
+                                  features and provides short-term predictions with better performance than the LSTM and Transformer models.
+                                  The main objectives of this research work are:
+
+                                  • To address the temporal and contextual features and propose a Context-Aware Temporal Transformer
+                                    (CAT-Former) model for short-term EV charging demand forecasting.
+                                  • As the charging trends differ between locations, we use three locations with the highest charging demand to
+                                    evaluate the charging demand forecast performance for multiple locations.
+                                  • To evaluate the performance of the proposed CAT-Former model with traditional deep learning-based indi-
+                                    vidual and hybrid models, along with the Transformer and Hybrid Transformer models.
+
+                                  This paper is organized as follows: Section "Literature review" reviews the related works. Section "Methodology"
+                                  details the methodology. Section "Design and implementation" shows the dataset analysis, design, and
+                                  implementation, including an overview of the baseline and proposed model and implementation details. Section
+                                  "Results and discussion" discusses the results. Section Conclusion concludes this study.
+
+                                  Literature review
+                                  To study the effects of EV charging on the electrical grid, it is necessary to predict the demand for EV charging.
+                                  Accurate EV charging predictions are essential for utility decision-making and growth. In addition to offering
+                                  solutions for the planning of CS development and improving the accuracy of optimal dispatching predictions.
+                                  As well as providing manufacturers with significant incentives for adopting EVs. Researchers have recently
+                                  developed several methods to enhance the effectiveness of various load forecasting techniques by applying
+                                  traditional methods or Artificial Intelligence (AI). However, traditional forecasting methods cannot fully utilize
+                                  the external factors influencing the power consumption of the CS14. Thus, these traditional methods fall short in
+                                  effectiveness15. The rapid advancement of AI, machine learning (ML), and deep learning has enabled intelligent
+                                  algorithms to significantly contribute to the success of big data technologies across various applications16. The
+                                  rapid advancement of AI technology has positively impacted power grids. Various algorithms, including Support
+                                  Vector Machines (SVMs), Random Forests (RF), and Artificial Neural Networks (ANNs), have been utilized to
+                                  address the diverse challenges faced by the power grid. These techniques have been thoroughly examined in the
+                                  context of power systems.
+
+
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                  2
+www.nature.com/scientificreports/
+
+
+                                  Deep learning
+                                  There is a high demand for deep learning-based methods to uncover the latent features of EV charges and
+                                  improve the accuracy of the forecasting model. Recurrent Neural Networks (RNNs) represent a significant
+                                  advancement in deep learning techniques, particularly in the context of time series forecasting. The two widely
+                                  recognized types of RNNs, specifically the Gated Recurrent Units (GRUs)17 and the Long Short-Term Memory
+                                  (LSTM)18, have been explored in terms of their application with time series forecasting. Li et al.19 also examined
+                                  the effectiveness of CNN, another deep-learning approach. Zhu et al.11 performed a comparative analysis of
+                                  several well-known deep-learning methodologies. Numerical analyses at various time intervals indicate
+                                  that deep learning approaches may accurately forecast short-term power consumption. Moreover, the study
+                                  demonstrated that LSTM surpasses other deep learning algorithms in reducing prediction errors. LSTM models,
+                                  both univariate and multivariate, have shown higher performance than traditional machine learning models.
+                                  When comparing different types of LSTM models, multivariate LSTM models, which consider factors such as
+                                  wind speed, temperature, and humidity, exhibit superior performance compared to univariate models in some
+                                  other studies as well20,21.
+                                      Elahe et al.22 examined the deep learning-based models, including LSTM, Bi-LSTM, CNN-LSTM,
+                                  ConvLSTM, and GRU, and considered various factors affecting the charging load, such as weather, calendar,
+                                  and seasons, for charging demand prediction. Three scenarios were established to investigate the impact of
+                                  external factors on enhancing forecasting accuracy. The findings indicate that incorporating these important
+                                  factors into prediction models enhances forecasting accuracy in all three scenarios. Chang et al.23 predicted fast-
+                                  charging station (FCS) charging power consumption with an LSTM neural network. Deep learning methods
+                                  like window normalization and weight initialization were used to forecast fast-charging power demand. The
+                                  forecasting model was validated using the real-world EV dataset from Jeju Island, South Korea. The forecasting
+                                  results indicate that the proposed LSTM model outperforms Bi-LSTM, GRU, and RNN with RMSE of 61.63,
+                                  NMAE of 5.15%, and NRMSE of 6.65%.
+                                      Zhu et al.24 forecast the short-term demands for CSs. The study examined four deep learning architectures:
+                                  deep neural networks, conventional RNNs, LSTMs, and GRUs, utilizing a charging load sequence from the
+                                  prior 24-hour period to predict the charging load for the following hour. The findings indicate that the GRU
+                                  outperformed the other three models. Mohsenimanesh et al.25 evaluated the performance of three deep learning
+                                  algorithms in predicting the total load required for charging a fleet of EVs: an LSTM, a Bi-LSTM, and a GRU.
+                                  The Bi-LSTM demonstrated the lowest MAE, MAPE, and RMSE, proving it to be the most effective approach for
+                                  forecasting EV fleet loads. Di Persio et al.26 studied EV charging forecasting utilizing various LSTM variations,
+                                  including multilayer LSTM, bi-LSTM, and sequence-to-sequence LSTMs. The findings reveal that Bi-LSTM
+                                  showed better results than the other methods for the specific time series load.
+                                      Vishnu et al.27 implemented three techniques—AR, SVR, and LSTM—for short-term EV demand forecasts.
+                                  The ACN repository provides real-world EV charging data that is utilized. The suitability of forecasting
+                                  approaches for the data and its influencing factors is assessed and determined by analyzing and finalizing the
+                                  Autocorrelation function (ACF) plot. The ACF plot is utilized to evaluate the randomness of the data and the
+                                  correlation matrix. The latest results on the test dataset demonstrate that the models can accurately monitor and
+                                  forecast the demand for EV loads. The LSTM model significantly decreases the MAE and RMSE compared to
+                                  other models.
+                                      Ge et al.29 proposed a technique using an improved random forest (IRF) model optimized by harmony search
+                                  (HS) to minimize prediction errors for predicting the spatial-temporal distribution of EV charging loads. They
+                                  integrated the charging behavior features of various EV types and the spatial-temporal coupling between EVs
+                                  and charging stations. The approach also includes a parallel computational method to enhance efficiency. Case
+                                  studies showed that the IRF model outperforms traditional methods like SVM and BPNN in predicting both
+                                  total and spatial-temporal distribution of EV charging loads.
+
+                                  Transformer-based techniques
+                                  Koohfar et al.28 implemented the Transformer model to forecast EV charging demand. They collected real-world
+                                  EV charging load data from 25 Boulder, Colorado, public CSs, each containing type 2 connectors with a 22-kW
+                                  capacity. The data included charging load and weather data from January 1, 2018, to December 28, 2021. The EV
+                                  charging load is predicted for three different periods: 7 days, 30 days, and 90 days. These intervals cover both
+                                  the medium and long term. The model’s performance was evaluated by comparing the RMSE and MAE against
+                                  traditional and deep learning models, including ARIMA, SARIMA, RNN, and LSTM. Based on the findings, the
+                                  Transformer model outperformed the time series and machine learning models regarding long-term prediction
+                                  performance.
+                                     Xing et al.30 introduced a forecasting model incorporating actual traffic data and human decision-making
+                                  behavior using Didi ride-hailing data. The model uses Regret Theory to simulate the decision-making process
+                                  of EV owners, predicting fast-charging demand in urban areas. Luo et al.31 proposed an Attribute-Augmented
+                                  Spatiotemporal Graph Informer (AST-GIN) by combining the GCN and Informer layers to improve prediction
+                                  accuracy and interpretability and extract relevant transportation data’s external and internal spatiotemporal
+                                  dependence. The training attribute-augmented encoder modelled external influences as dynamic attributes. The
+                                  AST-GIN model was evaluated using Dundee City data, and the experimental findings revealed that our model
+                                  was more successful than other baselines in addressing external factors over various periods.
+                                     Bae and Kwasinski32 proposed a mathematical model for predicting EV charging demand at highway CSs,
+                                  including fluid dynamic traffic models with M/M/s queueing theory. The model captures the spatial and temporal
+                                  dynamics of charging demand. Paevere et al.33 presented a methodology for spatial-temporal modeling of EV
+                                  charging demand and its impact on peak household electrical load. The model is applied to Victoria, Australia,
+                                  considering various EV uptake and charging behaviors. Zhang et al.34 proposed a forecasting framework using
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                 3
+www.nature.com/scientificreports/
+
+
+                                        an Adaptive Spatial-temporal Graph Neural Network with a Transformer (ASTNet-T) to predict charging loads.
+                                        The model is validated on datasets from Dundee City, showing significant improvements in accuracy.
+                                             This paper35 suggests a new hybrid short-term load forecasting (STLF) approach, which combines
+                                        bidirectional long short-term memory (BiLSTM), Bayesian hyperparameter optimization (BHO) and empirical
+                                        wavelet transform (EWT). the multi-step prediction is performed using a BiLSTM network, and BHO algorithm
+                                        allows effective tuning of hyperparameters on all sub-layers in order to maximize model accuracy. The study
+                                        shows the importance of effective hyperparameter tuning.
+                                             A decentralized Differential Privacy Federated Learning (DPFL)-based Advanced Metering Infrastructure
+                                        (AMI) was proposed36 as service architecture that shields consumer sensitive information with edge computing,
+                                        safe aggregation and Gaussian noise, in addition to malicious customer detection by means of K-means
+                                        clustering. Its effectiveness is confirmed by a Short-Term Load Forecasting (STLF) case study that shows how
+                                        it is more effective than the centralized and localized cases. The study highlights the importance of STLF as it
+                                        enhances consumer energy awareness, enables better electricity management, and supports the implementation
+                                        of effective demand response strategies.
+                                             Table 1 shows an overview of the literature studies.
+                                             According to the literature, the RNN-based techniques, especially LSTM, GRU, and hybrid techniques,
+                                        have all been utilized extensively to forecast EV load. However, due to the sequential processing of input data,
+                                        they have several limitations, particularly when confronted with datasets containing lengthy dependencies37.
+                                        This highlights the lack of research on utilizing attention-based processes for forecasting EV charging despite
+                                        their superior performance compared to RNNs. Koohfar, et al.28 implemented the Transformer models for EV
+                                        charging demand using Boulder city data and considered calendar, seasonal, and weather features. However,
+                                        they aggregated the demand data by day to predict for 7, 30, and 90 days ahead; the data aggregation reduced
+                                        the training data size for the proposed Transformer model and also disabled its capacity to forecast for shorter
+                                        time steps (e.g., 1 h). Xing, et al.30 performed fast-charging demand forecasting, including the actual traffic data
+                                        and human decision-making behavior using Didi ride-hailing data, where the model may not be generalized
+                                        well to cities with varying traffic patterns, resulting in different charging trends. Furthermore, studies based
+                                        on spatial-temporal EV charging demand forecasting using modeling-based techniques32,33 were implemented
+                                        using household and highway data, where the charging trends are different from those of a public CS or urban
+                                        charging trends. GCN-based hybrid techniques, including AST-GIN31 and ASTNet-T34, use a public dataset
+                                        from Dundee City, where the AST-GIN performance may degrade with highly dynamic data, and the ASTNet-T
+                                        model complexity may limit its practical application. The graph-based approaches, such as AST-GIN and
+                                        ASTNet-t, have obtained better accuracy than the baseline models; however, such models require large data for
+
+
+ References           Methods                        Dataset                         External Factors                    Metrics      Results
+                      LSTM, BiLSTM, CNN-             Public dataset of Caltech and                                       RMSE, MAE    Based on the RMSE, the average accuracy
+ Elahe et al.22                                                                      Weather, calendar, and seasons
+                      LSTM, ConvLSTM, GRU            JPL CS from ACN                                                     and MAPE     enhancement with these features is 42.73%.
+                                                                                                                                      With an RMSE of 61.63, NMAE of 5.15%,
+                                                     Real-world data from Jeju                                           RMSE,
+                      LSTM neural network, Bi-                                       FCS, publicly accessible,                        and NRMSE of 6.65%, the proposed LSTM
+ Chang et al.23                                      Island, South Korea from 1                                          NMAE,
+                      LSTM, GRU, and RNN                                             geographical characteristic                      model surpasses Bi-LSTM, GRU, and RNN
+                                                     January 2018 to 31 May 2018                                         NRMSE
+                                                                                                                                      models.
+                                                     Real-world CS data in
+                                                                                     Charging time, charging quantity    NRMSE,       The results obtained by GRU were better
+ Zhu et al.24         DNN, RNN, LSTM, and GRU        Shenzhen, China from April
+                                                                                     and real-time electricity price     NMAE         compared to the other three models.
+                                                     2017 to June 2018.
+ Mohsenimanesh        LSTM, a Bi-LSTM, and a         Real-world dataset from a CS                                        MAE, MAPE,   Bi-LSTM achieved the lowest MAE,
+                                                                                     Calendar Features
+ et al.25             GRU                            in Canada during 2017–2019.                                         RMSE         MAPE, and RMSE.
+                      Multilayer LSTM, BiLSTM,       Italian                         Calendar features including 365                  LSTM model significantly decreases the
+ Di Persio et al.26                                                                                                      MAE, RMSE
+                      and Seq-to-Seq LSTM            energy market Dataset           days, day of weeks and 24 h                      MAE and RMSE
+                      Auto Regressive (AR),          Public dataset of Caltech and
+                                                                                     Calendar features including hour    MAE and      LSTM model significantly decreases the
+ Vishnu et al.27      Support Vector Regressor       JPL CS from ACN from 24
+                                                                                     of day, day of week, week of year   RMSE         MAE and RMSE
+                      (SVR), and LSTM                April 2018 to 31 January 2019
+                                                                                                                                      Transformer showed the most effective
+                      ARIMA, SARIMA, RNN,            Public dataset of Boulder,
+                                                                                     Calendar using Month, Weekend,      RMSE and     long-term prediction performance, with
+ Koohfar et al.28     and LSTM, and Transformer      Colorado from 1 January
+                                                                                     Weekday, Seasons and Weather        MAE          RMSE values of 0.085, 0.096, and 0.112 for
+                      model                          2018 to 28 December 2021
+                                                                                                                                      k = 30, 60, and 90, respectively.
+                      like SVM and BPNN,
+                                                                                     Calendar features, charging
+                      Improved Random Forest                                                                             RMSE and     IRF model outperforms traditional
+ Ge et al.29                                         -                               behaviour characteristics of
+                      (IRF) and Harmony Search                                                                           MAE          methods like SVM and BPNN
+                                                                                     different EV types
+                      (HS),
+                                                                                     Calendar features, Actual traffic   RMSE and     Fast-charging demand prediction in urban
+ Xing et al.30        Regret Theory                  Didi ride-hailing data
+                                                                                     data and human decision making      MAE          areas
+                                                                                                                         RMSE and     The proposed model is effective
+ Luo et al.31         AST-GIN + GCN                  Dundee City Data                Calendar features
+                                                                                                                         MAE          considering external factors
+ Bae and              Fluid dynamic traffic models                                                                       RMSE and
+                                                     Highway CS                      Calendar features
+ Kwasinski32          and M/M/s queueing theory                                                                          MAE
+                                                     Household electrical data of    Calendar features, EV uptake and    RMSE and     Charging demand prediction and impact
+ Paevere et al.33
+                                                     Victoria, Australia             charging behaviours                 MAE          on peak household electrical load
+                                                                                                                         RMSE and
+ Zhang et al.34       ASTNet-T                       Dundee City Data                Calendar features                                Significant improvements in accuracy
+                                                                                                                         MAE
+
+
+                                        Table 1. An overview of the literature.
+
+
+Scientific Reports |       (2025) 15:36652                       | https://doi.org/10.1038/s41598-025-20557-x                                                                      4
+www.nature.com/scientificreports/
+
+
+                                  training. The individual CSs have a limited amount of charging data. Also, the performance of such models for
+                                  the multiple CSs data can decrease. Also, these graph-based models add more computational complexity.
+                                      The existing research focuses on aggregated or single CS demand forecasting and overlooks charging behavior
+                                  and trends. Charging trends for different locations can be different based on the time of day, making them
+                                  more dynamic. Evaluating the models’ accuracy using a single CS or aggregated data may ignore such charging
+                                  trends. Historical charging data from different charging locations within a city can be crucial in evaluating the
+                                  performance of the models for EV charging demand forecasting, especially for short-term forecasting.
+
+                                  Methodology
+                                  EV charging trends and demand tend to differ at different locations in a city. The model’s performance can be
+                                  evaluated based on multiple charging locations, considering the different charging trends and demand, with
+                                  limited data. The temporal features based on the calendar and demand factors of the charging locations can be
+                                  included in the Transformer model for accurate demand forecasting. An enhanced Transformer-based technique
+                                  has been implemented to address the challenge of short-term dependencies in time series forecasting. In this
+                                  research, we designed a Context-Aware Temporal Transformer (CAT-Former) model, which uses temporal and
+                                  contextual features to predict EV charging demand using the EV historical data and Weather information of
+                                  Boulder City. The charging location is used as a contextual feature. However, temporal features include hour, day
+                                  of the week, day of the month, day type, and session duration. The external factors include weather data such as
+                                  temperature, wind speed, and precipitation.
+                                      In this research, a unique approach has been implemented to forecast the EV charging demand for the short
+                                  term, including one-hour and one-day predictions. The performance of the proposed CAT-Former model is
+                                  evaluated using the Simple and Hybrid Transformer models and other traditional baseline models. This study
+                                  uses Boulder City, Colorado’s EV historical and weather data. The dataset analysis was based on various calendar
+                                  features, showing the different charging trends through the data period. Furthermore, this study selects the three
+                                  charging locations with the highest number of charging sessions in the Boulder City data, assuming they also
+                                  have a higher charging demand. The study is focused on three charging locations within a city, and more locations
+                                  could also be included for performance analysis with the proposed model. The selection of multiple locations
+                                  helps evaluate the models, as the three locations have different charging trends, and the charging behaviors of
+                                  the drivers may vary among these. Furthermore, the contextual and temporal features are selected and provided
+                                  to the CAT-Former model. The public dataset is divided into training and test sets for the model’s training
+                                  and testing. The deep learning-based base models, including LSTM, BiLSTM, CNN-LSTM, CNN-BiLSTM, the
+                                  Transformer model, and a hybrid Transformer model using LSTM-based Encoder-Decoder, are compared with
+                                  the CAT-Former model. The proposed model could be further extended to multi-step forecasting such as 24-
+                                  hour rolling forecasting, using the input data of previous hours.
+                                      As stated by Koohfar et al.28, the EV charging demand was aggregated per day for all the charging facilities to
+                                  be used for day ahead predictions. The EV charging data used in our research contain hourly charging sessions
+                                  that can be used for the training of the models for 1-hour predictions. However, for the 1-day predictions, the
+                                  data have to be aggregated per day. Therefore, the training and evaluation of the proposed CAT-Former model,
+                                  along with the baselines, are performed separately for 1-hour ahead prediction using hourly data and 1-day
+                                  ahead prediction using daily aggregated data. Due to the usage of hourly and aggregated daily data, there was
+                                  no need to perform a unified multi-horizon model considering the 1-hour and 1-day input data. The input
+                                  provided to the baselines and the CAT-Former model includes the same data. However, the baseline models do
+                                  not process this data, and the data features are not processed as contextual or temporal features, are processed
+                                  in the CAT-Former model. The processing of the contextual and temporal features is performed, and then the
+                                  features are used for the prediction by the Transformer model used in the proposed methodology. Figure 1
+                                  shows the methodology, where green color is used specifically to highlight the steps involved for the proposed
+                                  method.
+
+                                  Proposed CAT-Former model
+                                  This research designs and implements the CAT-Former model using Temporal and contextual features with a
+                                  Multi-Head Attention-based Encoder and Decoder model. This subsection discusses the process of the CAT-
+                                  Former model, along with the temporal and contextual features.
+
+                                  1) Temporal features
+
+                                  In this research, we have proposed the Context-Aware Transformer model considering the Temporal Features
+                                  of the data. As the research predicts the EV charging demand for the multiple charging locations, the three CSs
+                                  are selected based on the highest number of charging sessions. Furthermore, considering there can be several
+                                  features in the data that can be incorporated into the designed model, considering the temporal features, which
+                                  can be extracted using the Charging Start Date and Time values including Hour of the day (0–23), Day of
+                                  the week (Monday-Sunday), Day type (weekday/weekend), Day of the month (1–31), and Session duration
+                                  (calculated from Start Date Time, End Date Time, or Total Duration). Energy is the target vehicle that needs to
+                                  be predicted. The temporal features are provided in Table 2.
+
+                                  a)     Hour of the Day The hour h represents the hour in a 24-hour format (0–23).
+                                  b)     Day of the Week The day of the week dw represents the day of the week as an integer value.
+                                  c)     Day of the Month The day of the month (dm) represents the day of the month when the session occurred.
+                                  d)     Day Type The day type d) is defined based on whether the day of the week is a weekday or a weekend.
+
+
+
+Scientific Reports |   (2025) 15:36652                 | https://doi.org/10.1038/s41598-025-20557-x                                                5
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 1. A framework for short-term CSs demand forecasting using multiple locations.
+
+
+
+                                  Temporal Features   Variables        Conditions                            Values
+                                  Hour of the Day     h = th            0 ≤ th < 24                          24-hours (0–23)
+                                  Day of the Week     dw = Day week     0 ≤ Day week < 6                     7 days of week (0 = Monday, 6 = Sunday)
+
+                                  Day of Month        dm = tday         1 ≤ tday < 31                        Day of month (1–31)
+                                                                        {
+                                                      dt = 0 or 1           0, if day week ∈ {0,1, 2,3, 4}
+                                  Day Type                                     1, if day week ∈ {5,6}        Day of the week as 0 weekday and 1 is weekend
+
+
+                                                                        sd =
+                                                                               End_time(et)−Start_time(st)
+                                  Session Duration    sd
+                                                                                          3600
+                                                                                                             Charging session in minutes
+
+
+                                  Table 2. An overview of the temporal features.
+
+
+
+                                  e) Session Duration Let Start and End times represent the start and end times of a charging session. The ses-
+                                     sion duration (sd) is the difference between the start and end time converted in seconds and then divided by
+                                     3600 to convert to hours.
+
+                                  (2) Contextual features
+
+                                  The model uses locational data (station name, latitude, longitude) and weather conditions as contextual inputs to
+                                  improve the accuracy of EV charging demand forecasting. These features present significant external factors that
+                                  affect charging behavior at various stations. The contextual features are provided in Table 3.
+
+                                  a. Location The location of each CS is described by its geographical coordinates, including the latitude and
+                                     Slong ​longitude of the CS. The spatial context of each station is represented by the i.
+
+
+
+
+Scientific Reports |   (2025) 15:36652                 | https://doi.org/10.1038/s41598-025-20557-x                                                          6
+www.nature.com/scientificreports/
+
+
+                                      Contextual Features            Variables    Features                         Values
+                                      CS location                    Clocation    ​[ Slat ​, Slong ​]              Latitude and Longitude of CS
+
+                                      Weather                        Cweather     [ Wtemp ​, Wpercip ​, Wwind ​]   Temperature, Percipitation and Wind
+                                      Combined Contextual Features   C            [ Clocation ​, Cweather ​]       Combination of Location and Weather Features
+
+
+                                  Table 3. An overview of the contextual features.
+
+
+
+                                      b. Weather Features Weather conditions significantly impact energy demand at CSs. The key weather variables
+                                         included are as follows. Wtemp ​is the temperature, Wpercip ​is the precipitation and Wwind ​is the wind
+                                         speed.
+                                      c. Combine Contextual Feature Vector The contextual inputs are combined with the location and weather.
+
+                                  These temporal and contextual features are integrated into the model, providing a richer representation of the
+                                  external factors affecting charging demand.
+
+                                  Context-Aware Temporal transformer (CAT-Former)
+                                  The Context-Aware Temporal Transformer model is designed to predict energy demand for EV CSs for a short
+                                  period, including 1 h and 1 day ahead. The model leverages temporal and contextual features, capturing the
+                                  dependencies in charging behavior across time and location-specific attributes. The designed CAT-Former
+                                  Model can effectively use the temporal and contextual features from the dataset, which helps predict EV charging
+                                  demand based on external factors that can affect it throughout the calendar year. The input at each time step t,
+                                  Zt consists of both temporal and contextual features.
+
+                                      a) Temporal features
+
+                                  These capture the inherent time-dependent aspects of energy demand provided in Eq. (1)
+                                                                             Xtemporal,t = [h, dw, dt, dm, sd](1)
+
+                                      b) Contextual features
+
+                                  These include external factors such as location and weather conditions, provided in Eq. (2).
+                                                                                 Xcontext,t = [Clocation , Cweather ](2)
+
+                                  The combined input at time t is shown in Eq. (14).
+                                                                                 Zt = [Xtemporal,t , Xcontext,t ](3)
+
+                                      c) Transformer model
+
+                                  The temporal position of each input needs to be encoded to capture the sequential nature of the data. The
+                                  positional encoding adds time-dependent information to each input feature, as shown in Eq. (4).
+                                                                                 Pt = P ositionalEncoding (t)(4)
+
+                                  Thus, the combined input with positional encoding is shown in Eq. (5).
+
+                                                                                            Zt′ = Zt + Pt (5)
+
+                                  The core of the Transformer is the self-attention mechanism, which captures dependencies between different
+                                  time steps. For each time step t, the query (Q), key (K), and value (V) vectors are computed from the input
+                                  feature Z′ t ​. The Eq. (6) shows Query, Eq. (7) shows Key, and Eq. (8) shows the Value.
+
+                                                                                               Q = WQ Zt′ (6)
+
+                                  ​
+
+                                                                                              K = W K Zt′ (7)
+
+                                  ​
+
+                                                                                              V = W V Zt′ (8)
+
+                                  where WQ is the learned weight matrix for the query Q, WK is the learned weight matrix for the key K, and
+                                  WV is the learned weight matrix for the value V.
+                                    The attention score between the time step t and another time step t′ is computed as shown in Eq. (9).
+
+
+Scientific Reports |   (2025) 15:36652                      | https://doi.org/10.1038/s41598-025-20557-x                                                          7
+www.nature.com/scientificreports/
+
+
+                                                                                            QK T
+                                                                         Attention (Q, K) = √ (9)
+                                                                                             dk
+
+                                  where dk ​is the dimensionality of the key vectors.
+                                    The attention weights are applied to the value vectors, as shown by Eq. (10).
+                                                                                               (           )
+                                                                                                    QK T
+                                                                    Outputt, t′ = sof tmax          √          V (10)
+                                                                                                      dk
+
+                                  To capture various aspects of the input, multiple attention heads are used, as shown by Eq. (11).
+                                                 M ultiHead(Q, K, V ) = Concat(head1 , head2 , head3 , . . . , headh )WO (11)
+
+                                  Where WO is the output of the weighted matrix.
+                                      Each head headi corresponds to a separate self-attention mechanism.
+                                      The encoder applies multi-head self-attention followed by a feedforward layer to the input sequence Zt′ ​for
+                                  all time steps. For each time step t, the encoder’s output is shown by Eq. (12).
+                                                               Ht = F eedF orward (M ultiHead (Q, K, V ))(12)
+
+                                  The decoder also uses a multi-head attention mechanism that focuses on the encoded temporal-contextual
+                                  information from the encoder and the previous values of the target sequence. This allows the model to generate
+                                  predictions utilizing both historical and external information. As shown in Eq. (13), For each predicted time
+                                  step t, the decoder uses
+                                                              Dt = M ultiHead(Qdecoder , Kencoder , Vencoder )(13)
+
+                                  Finally, the decoder produces the predicted energy demand dt for the future time step t as shown in Eq. (14).
+
+                                                                              dt = Linear (Dt )(14)
+
+                                  where linear is a linear transformation or fully connected layer commonly used in neural networks. Specifically,
+                                  a linear transformation applies a weight matrix and bias to an input vector.
+                                      The input layer utilizes temporal and contextual features of a specific charging location and time. The
+                                  Transformer encoder processes input information to produce representations encapsulating temporal
+                                  dependencies and relationships among contextual features. The transformer decoder layer utilizes the encoded
+                                  information provided by a feed-forward decoder. Finally, the prediction is made for the particular CS over a
+                                  specific period, such as an hour or a day. The proposed CAT-Former architecture is shown in Fig. 2.
+
+                                  Performance metrics
+                                  Several performance measures evaluate model accuracy, including Root Mean Squared Error (RMSE), Mean
+                                  Squared Error (MSE), and Mean Absolute Error (MAE). MSE and MAE are among the commonly used error
+                                  evaluation functions for load forecasting.
+
+                                  • MSE calculates the average of the squared discrepancies between the predicted and actual values. It is more
+                                    sensitive to outliers than MAE, as it penalizes larger errors more heavily due to the squaring of differences.
+                                    A lower MSE indicates improved model efficacy. In summary, RMSE and MSE are more sensitive to large
+                                    errors due to squaring, while MAE provides a more robust measure that is less affected by outliers. MSE can
+                                    be calculated as shown by Eq. (15).
+                                                                                   1 n
+                                                                        M SE =                  i )2 (15)
+                                                                                      i=1 (yi − y
+                                                                                   n
+
+                                  • MAE is the sum of the absolute discrepancies between the predicted and actual values. It offers a simple met-
+                                    ric for predicting accuracy, reflecting the average magnitude of errors without considering their direction.
+                                    MAE can be calculated as shown by Eq. (16).
+                                                                                    1 n
+                                                                        M AE =                   i |(16)
+                                                                                       i=1 |yi − y
+                                                                                    n
+                                     A lower value of MSE and MAE indicates better prediction performance.
+
+                                  Design and implementation
+                                  Dataset
+                                  This research uses a public dataset from Boulder City, Colorado, containing 26 EV CS demand data from January
+                                  2018 to November 2023. The number of charging locations has increased every year. The dataset includes data
+                                  on EV CSs, with each entry representing a charging session. The important columns are Station Name, Address,
+                                  City, and State Province, which provide the station’s location data. The Start Date Time and End Date Time
+                                  columns track the start and end of the charging sessions, while Total Duration and Charging Time provide the
+
+
+Scientific Reports |   (2025) 15:36652               | https://doi.org/10.1038/s41598-025-20557-x                                                  8
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 2. An overview of the CAT-Former model.
+
+
+
+                                  duration of the session and the actual charging period, respectively. Furthermore, Energy kWh, GHG Savings
+                                  kg, and Gasoline Savings gallons reflect each session’s energy consumption and environmental impacts. The
+                                  dataset comprises station-specific metadata, including Port Type and ObjectID, for identification and analytical
+                                  purposes.
+
+                                  Dataset analysis
+                                  The dataset analysis uses the charge sessions and demand for various types by year, month, day of the week, and
+                                  day type. Figure 3 shows Boulder City’s CSs locations and dispersion using the dataset’s latitudes and longitude
+                                  values. Most places are near together and in the city center. Some CSs are outside the city. The position of
+                                  CSs affects charging demand. The CSs also comprehend the road network surrounding them, making them
+                                  accessible and easy for cars to drive to charge. Most drivers choose CSs near their homes or workplaces. Red
+                                  marks charging places. The models are evaluated in Park 1, Rec 1, and Street 1, which are highlighted in green,
+                                  blue, and yellow based on selection criteria.
+
+                                  Charging sessions analysis
+                                  The analysis includes annual EV charging sessions. 2023 had the most charging sessions, followed by 2022 and
+                                  2019. 2020 was the lowest, and 2018 was the second. Figure 4 shows Boulder City’s yearly pricing session analysis.
+                                  Figure 4 shows higher monthly charging sessions in summer, notably May–October. Charge sessions drop from
+                                  November to March and rise slightly in April. Also important for seasonal billing is monthly data analysis. Since
+                                  demand changes, studying charging patterns requires knowing the number of charging sessions each day of the
+                                  week. According to Fig. 4, Monday and Wednesday have the most charging sessions, while Friday and Sunday
+                                  are moderate. Tuesday and Thursday have the fewest charging sessions. Figure 4 demonstrates that weekday
+                                  charging sessions and weekend analysis reveal stronger weekday charging trends. Similar energy utilization and
+                                  charging sessions. Peak charging occurs between 7 AM and 6 PM, with most sessions around 1–2 PM. Early (1–5
+                                  AM) charging is infrequent. The 6 AM rise in sessions may be due to morning commuting. Charging decreases
+                                  after 6 PM. Boulder City hourly price patterns are shown. The top 10 Boulder City CSs with the most charging
+                                  sessions are available.
+
+                                  Charging demand analysis
+                                  The charging trends of Boulder City were identified by analyzing the demand for charging after conducting
+                                  extensive research on charging sessions. Comparing the dataset’s charging demand and charging sessions by year,
+                                  month, day of the week, and day type shows that charging sessions increase charging demands. As in Boulder
+                                  City, 2023 has the highest charging demand and 2022 the second. 2018 has the second-lowest charging demand
+                                  after 2020. Figure 5 shows charging session-based annual use. After the yearly charging demand research,
+                                  monthly demand analysis is essential for understanding seasonal charging trends. The monthly demand analysis
+                                  reveals that charging demand is lower from December to May than from June to November, with increased
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                9
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 3. CSs locations in boulder city: road network.
+
+
+
+                                  demand in July and August, as shown in Fig. 5. Monday and Friday are the busiest charging days in Boulder City,
+                                  followed by Wednesday. Figure 5 indicates that Tuesday and Thursday charge less than Saturday and Sunday.
+                                  Figure 5 demonstrates that Boulder City’s dataset charging demand was higher on weekdays than on weekends.
+                                  Energy use increases between 8 AM and 6 PM, peaking at 2–3 PM. Early morning energy demand drops (1–5
+                                  AM). The pattern suggests greater workday charging. The nighttime energy usage drops around 8 PM. Boulder
+                                  City also seeks hourly rates. The 10 most popular Boulder City CSs are given. Only the top 3 CSs are used to test
+                                  the model and baseline performance.
+
+                                  Selected three locations data analysis
+                                  The highest number of charging sessions for Boulder City is utilized to apply and evaluate the proposed model
+                                  and base models. The three most popular Boulder City CSs are N Boulder Rec 1, Baseline St 1, and Carpenter
+                                  Park 1. For the specified CSs, charging sessions and demand patterns are analyzed using calendar parameters like
+                                  year, month, day of the week, and day type. Analyzing charging sessions and demand helps understand seasonal
+                                  charging trends and weekday and weekend charging habits.
+
+                                  a) Charging sessions
+
+                                  For the three selected charging locations, including N Boulder Rec 1, Baseline St 1, and Carpenter Park 1, Fig. 6(a)
+                                  shows that each location has a mixed pattern in charging sessions each year, with the highest in 2023 and the
+                                  lowest in other years. From May to August, charging demand is larger than from September to December, which
+                                  shows a decline for all three locations. Figure 6(a) shows that Boulder City’s charging demand is higher in the
+                                  middle of the year due to a mixed charging session pattern from January to April for all years. Weekend charging
+                                  sessions are lower than weekdays at Boulder Rec 1. However, Baseline St 1 and Carpenter Park 1 feature more
+                                  weekend charging sessions than weekday ones. Figure 6(b) shows that all three locations have larger weekday
+                                  charging demand than on weekends.
+
+                                  b) Charging demand
+
+                                  To understand charging patterns in the three specified locations, the charging demand has to be assessed.
+                                  However, more charging sessions mean more charging demand for the following locations. Charging demand
+                                  analysis uses the same calendar aspects. Figure 7(a) shows that the charging demand in the three places is
+                                  largest in 2022 and 2023 compared to prior years, indicating a mixed charging demand. All three locations have
+                                  fluctuating charging demand over the years. The dataset shows dynamic monthly charging demand in Boulder
+                                  City, as seen in Fig. 7. Figure 7(a) shows that daytime charging demand is higher than nighttime. Figure 7(a)
+                                  also shows that the charging demand for all three sites on weekdays and weekends fluctuates, with higher and
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                 10
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 4. Charging sessions analysis of boulder city.
+
+
+
+                                  lower demand on various days. Figure 7(b) shows that all three locations have larger weekday charging demand
+                                  than on weekends.
+                                      The comprehensive dataset analysis based on the charging sessions and demand trends, including yearly,
+                                  monthly, weekly, and daily, highlights the different trends over time. Furthermore, the three charging locations
+                                  with the highest charging demand in the city are selected and analyzed to show the charging session and demand
+                                  trends for the following locations, which highlights the dynamic charging patterns. Also, the trends based on
+                                  day type, such as weekday and weekend, are provided to highlight that the charging demand for these locations
+                                  is higher on weekdays. The analysis for these locations indicates that each CS has a different charging demand.
+                                  Therefore, the focus of this study is on forecasting the demand for multiple CSs using a single model. The
+                                  charging data for each location is then used based on the calendar features as the temporal features, weather, and
+                                  location as the contextual features, as input for the proposed model to perform the charging demand predictions
+                                  for these locations.
+
+                                  Boulder weather data analysis
+                                  The weather is an important external factor that affects charging behaviour. Boulder City weather data has been
+                                  collected and merged with the EV historical charging data. The analysis of the weather data shows that the data
+                                  do not contain any missing or null values. The weather data for Boulder City is based on hourly weather data,
+                                  including all the information such as temperature, wind speed, and precipitation. Therefore, the weather data
+                                  were synchronized with the EV charging sessions data, which is also on an hourly basis, using the datetime.
+                                  Figure 8 shows the correlation matrix.
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                               11
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 5. Charging demand analysis of boulder city.
+
+
+
+                                      Furthermore, temperature, wind speed, and precipitation are key weather factors that can be used to train
+                                  and evaluate the model for EV charging demand predictions. The average temperature is selected in the weather
+                                  features. The temperature, precipitation, and wind speed per hour are analyzed to determine the weather trends
+                                  in the city, which are shown in Fig. 9.
+
+                                  Implementation
+                                  This section provides an overview of the data preprocessing and hyperparameter optimization used for the
+                                  baseline models, along with a brief overview of the proposed CAT-Former model.
+
+                                  Hyperparameters optimization The hyperparameter optimization was performed to improve the performance
+                                  of the baseline models during the implementation process. To fine-tune the baseline models fairly, different val-
+                                  ues for the number of epochs, batch size, and learning rate were considered during the experimentation to obtain
+                                  the best performance for the 1-hour and 1-day ahead predictions. The number of epochs (20,50,100), batch
+                                  size (32, 64), and learning rate (0.01, 0.001, 0.0001) have been utilized during the training process for all the
+                                  models; however, the baselines perform relatively better for the hyperparameter values as provided in Table 4.
+                                  Table 4 shows the parameter values used for the model’s implementation process. Data preprocessing is handled
+                                  by MinMaxScaler, which normalizes feature values to a specified range, enhancing model performance and
+                                  convergence. As the charging sessions in the dataset are in the date format, providing the weekdays are in order.
+                                  Therefore, the MinMaxScaler encodes the weekdays from Monday to Sunday using numerical values (0–6). The
+                                  numerical values are then used to generate the scaling values using the scaler.fit_transform() method. The train-
+                                  ing utilizes the Adam optimizer, known for its adaptive learning rate capabilities, set here at 0.001 to ensure sta-
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                 12
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 6. (a) Charging sessions analysis using calendar features of the selected three locations in boulder city. (b)
+                                  Charging sessions analysis for day type of the selected three locations in boulder city.
+
+
+
+
+                                  Fig. 7. (a) Charging demand analysis using Calendar features of the selected three locations in Boulder city.
+                                  (b) Charging demand analysis for day type of the selected three locations in Boulder city.
+
+
+
+                                  ble and effective updates to the model’s weights. The 100 epochs are used for the training of the proposed model
+                                  along with the baselines. A batch size of 32 is employed to ensure that the model’s accuracy and computational
+                                  efficiency are balanced. The prediction performance is assessed by calculating the Mean Absolute Error (MAE)
+                                  and Mean Squared Error (MSE), which offer valuable information regarding the accuracy of predictions and the
+                                  extent of errors. Using the MAE and MSE as evaluation metrics provides a better understanding of the model’s
+                                  performance based on the error value. The model’s capacity to learn intricate patterns is improved by employing
+                                  ReLU (Rectified Linear Unit) and Tanh (Hyperbolic Tangent) activation functions, which introduce non-linear-
+                                  ity. A dropout rate is used to avoid overfitting while training the deep learning-based models. The dropout rate
+                                  can be between 0.2 and 0.5; however, in this study, a dropout rate of 0.3 is used. The hyperparameters shown in
+                                  Table 4 have been selected after detailed experimentation to utilize the best values for better performance of the
+                                  proposed model, and the same parameters are used for the baselines as well.
+
+                                  Data preprocessing After performing a detailed analysis using calendar features for the Boulder city EV charg-
+                                  ing data, only the data of the three selected charging locations are considered for the implementation of models.
+                                  The fixed start and end dates are used to split the dataset in to the training and test sets. The training sets span
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                 13
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 8. Boulder city weather: correlation matrix.
+
+
+
+
+                                  Fig. 9. Weather trends: temperature, precipitation, and wind speed.
+
+
+
+                                  from January 2018 to June 2023. This period provides the historical data necessary for building and training the
+                                  model, allowing it to learn patterns and trends in EV charging behavior over these years. The test sets cover the
+                                  timeframe from July 2023 to November 2023, which follows immediately after the training period. The dataset
+                                  split is shown in Table 5. The training set contains more data to provide better training to the model and to
+                                  understand the charging trends over the years, and also contains the data of the first size months of 2023, which
+                                  are then included in the test set from July till November 2023. The test set contains only 5 months of data, as the
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                14
+www.nature.com/scientificreports/
+
+
+                                  Variables              Values
+                                  Scaler                 MinMaxScaler
+                                  Optimizer              Adam
+                                  Error Metrics          MAE, MSE
+                                  Epochs                 100
+                                  Batch Size             32
+                                  Learning Rate          0.001
+                                  Activation Functions   ReLu, Tanh
+                                  Dropout Rate           0.3
+
+
+                                  Table 4. Hyperparameteres.
+
+
+
+                                  Training Set (start)   Training Set (end)
+                                  01/2018                06/2023
+                                   Test Set (start)      Test Set (end)
+                                  07/2023                11/2023
+
+
+                                  Table 5. Dataset split.
+
+
+
+                                  study is focused on the short-term predictions, the data required to be used as the input, like the previous 24 h,
+                                  and 30 days, to understand the trends and patterns in the data. This recent data is used to evaluate the perfor-
+                                  mance, assessing how well it predicts EV charging patterns based on the knowledge gained from the training set.
+                                  The model’s predictions compared with actual data using test set, the effectiveness and accuracy of the model in
+                                  forecasting EV demand is evaluated. The seasonality is not preserved, as the impact of the seasonality is more
+                                  important for medium and long-term demand predictions. The electricity prices and traffic volumes were not
+                                  included because their influence on short-term charging behavior is relatively limited, as highlighted in Table 1
+                                  under external factors for studies22–34, however only Zhu et al.24 considered the real-time electricity prices. In-
+                                  stead, this study focuses on historical charging data from three different CS locations in Boulder City, capturing
+                                  both temporal and spatial usage patterns. Short-term demand is highly correlated with recent station activity,
+                                  time-of-day, and day-of-week trends, as indicated by the literature survey22,25–34, which are directly reflected in
+                                  the historical data.
+
+                                  Baseline models All the baselines have been provided with location, weather information, and charging ses-
+                                  sion information, including time as input. The following information regarding the charging location/station,
+                                  weather information, and the charging session time is necessary. Therefore, the input pattern is the same for
+                                  all the baselines. However, the baselines didn’t process these inputs as contextual or temporal features. The fol-
+                                  lowing baselines have been selected due to their extensive usage and their known performance for EV charging
+                                  demand prediction in the state-of-the-art prediction-based studies, as LSTM, BiLSTM and CNN-LSTM are
+                                  used in several studies22–28 and the Transformer model was also considered in28. Therefore, the selection of the
+                                  baselines includes the individual models like LSTM, BiLSTM, and Transformer model, and also considers the
+                                  hybrid models like CNN-LSTM, CNN-BiLSTM and LSTM-Transformer model to highlight the performance of
+                                  individual and hybrid models. The hyperparameter optimization is also performed to improve the performance
+                                  of the baselines. The proposed model performance comparison with performed with these individual and hybrid
+                                  models to provide a better understanding of their performance considering the dynamic nature of EV charging
+                                  demand.
+
+                                  a) LSTM
+
+                                  The LSTM model is structured sequentially, with three stacked LSTM layers. The initial layer comprises 100
+                                  units, processing input sequences containing 100 characteristics, succeeded by a second LSTM with 50 units and
+                                  a third with 25 units, which capture long-term dependencies. Dropout layers are used following each LSTM to
+                                  mitigate overfitting, whilst Batch Normalization enhances training stability. Subsequently, two Dense layers are
+                                  employed, the first including 64 units for feature transformation, followed by a final single unit designated for
+                                  predicting continuous values.
+
+                                  b) BiLSTM
+
+                                  The BiLSTM model has three Bidirectional LSTM layers, each followed by Dropout and Batch Normalization,
+                                  tailored for sequential data jobs. Bidirectional LSTMs analyze sequences in both directions, encompassing past
+                                  and future dependence. The initial two layers include 128 units each, while the third layer comprises 64 units,
+                                  resulting in a progressive reduction of output forms. Dropout layers mitigate overfitting by randomly omitting
+                                  input units, whereas Batch Normalization enhances training stability by normalizing activations. A concluding
+                                  Dense layer with one unit forecasts a continuous result, signifying a regression problem.
+
+
+Scientific Reports |   (2025) 15:36652                    | https://doi.org/10.1038/s41598-025-20557-x                                            15
+www.nature.com/scientificreports/
+
+
+                                  c) CNN-LSTM
+
+                                  The CNN-LSTM model combines convolutional and LSTM layers to extract spatial and temporal characteristics
+                                  from sequential input. The process commences with a 1D Convolutional layer of 64 filters, which extracts local
+                                  patterns and yields an output shape of (None, 28, 64). Subsequently, Batch Normalization is used for stability,
+                                  followed by MaxPooling to diminish the size of the feature map. A second convolutional block employs 128 filters
+                                  for enhanced feature extraction, accompanied by Batch Normalization and MaxPooling. The model proceeds to
+                                  LSTM layers: the initial layer has 50 units, followed by Dropout and Batch Normalization for regularization, and
+                                  a second LSTM layer with 30 units to enhance temporal pattern recognition. Dense layers, including a 64-unit
+                                  layer and a single-unit output layer, forecast a continuous result, signifying a regression task.
+
+                                  d) CNN-BiLSTM
+
+                                  This model combines CNN and LSTM layers. The procedure starts with two Conv1D layers (64 and 128 filters)
+                                  to extract local features from sequential input, followed by MaxPooling layers to reduce dimensionality. Batch
+                                  normalization improves training stability, whereas two LSTM layers (50 and 30 units) proficiently capture
+                                  temporal dependencies, with the first LSTM returning sequences. Dropout layers reduce overfitting, while dense
+                                  layers conclude with a single output node for regression.
+
+                                  e) Transformer
+
+                                  The foundation of this model architecture is a MultiHeadAttention layer, which divides the input into multiple
+                                  heads. This enables the model to concentrate on distinct segments of the input sequences simultaneously. The
+                                  attention mechanism calculates queries, keys, and value representations, applying scaled dot-product attention.
+                                  After applying attention, the output is sent through a GlobalAveragePooling1D layer to condense the sequence.
+                                  The output is flattened and sent to a dense layer for regression, forecasting a singular output value.
+
+                                  f) Hybrid transformer
+
+                                  The hybrid model combines Transformer and LSTM architectures. The system employs an LSTM-based encoder
+                                  and decoder to record temporal dependencies, using a multi-head attention mechanism to manage long-range
+                                  dependencies and context. The input sequence undergoes processing by an LSTM encoder, followed by positional
+                                  encoding to preserve sequential information. Multi-head attention layers are utilized to enhance the encoded
+                                  representation, and then layer normalization and dropout for regularization are used. The decoder employs an
+                                  additional LSTM layer to analyze the target sequence, which is followed by positional encoding and attention
+                                  layers focusing on the encoder’s output. A flattened layer forecasts the output sequence.
+
+                                  Proposed CAT-Former model The Context-Aware Temporal Transformer model integrates temporal and con-
+                                  textual features to predict EV charging demand. Temporal features are encoded using a Transformer-based ar-
+                                  chitecture, including hour, day of the week, and session duration, alongside contextual information like weather
+                                  conditions and station location. The CS location is provided in latitude and longitude. The weather data contains
+                                  the temperature, windspeed, and precipitation for the following day. The charging location and weather data are
+                                  combined before being input into the model. The model leverages multi-head self-attention within the encoder
+                                  to capture dependencies across time and context. At the same time, the decoder predicts energy demand for spe-
+                                  cific future intervals (e.g., one hour or one day ahead). The prediction is optimized using a mean squared error
+                                  loss function, enabling accurate energy demand forecasting in EV CSs.
+
+                                  Results and discussion
+                                  This section provides the proposed model’s results, analysis, and evaluation using the baseline models for one-
+                                  hour and one-day-ahead predictions from three selected locations in Boulder City.
+
+                                  One hour ahead
+                                  One-hour ahead demand forecasting is challenging because of the different charging patterns and behaviour at
+                                  different charging locations in Boulder City. The charging trends at the charging point can differ due to location.
+                                  Multiple charging locations can help effectively evaluate the proposed model’s performance and baseline models.
+                                  Table 6 shows the actual values for the three charging locations, different demand and charging trends, and
+                                  predicted values for a specific hour forecast of the three charging locations with different actual and predicted
+                                  charging demands, i.e., Actual and Predicted (kWh).
+                                      The comparative evaluation of MAE and MSE for the proposed and baseline models for demand forecasting
+                                  for the Park1 Location in Boulder City data for 1 h ahead forecasting reveals significant differences. The LSTM
+                                  model produced an MSE of 1.5286 and an MAE of 1.2364, whereas the BiLSTM showed slightly higher results.
+                                  The CNN-LSTM model enhanced the outcomes, achieving an MSE of 0.9438 and an MAE of 0.9714. Additional
+                                  improvement was noted using CNN-BiLSTM, resulting in a mean squared error of 0.6699. The Transformer
+                                  model demonstrated commendable performance; however, the Hybrid Transformer, which combines several
+                                  methods, significantly lowered the MSE to 0.5155. The proposed CAT-Former performs better for the Park 1
+                                  location as compared to all baselines, with the lowest MSE of 0.461 and an MAE of 0.6789. The error comparison
+                                  for the 1-hour ahead prediction for the Park 1 charging location is shown in Fig. 10.
+                                      The performance comparison across different models for demand forecasting for the Rec1 charging location
+                                  for 1 h ahead also includes substantial variations in accuracy, as shown in Fig. 11. The LSTM model achieved an
+                                  MSE of 2.7324 and an MAE of 1.653, but the BiLSTM model showed higher errors with an MSE of 3.8896. The
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                                16
+www.nature.com/scientificreports/
+
+
+                                  Locations             Park1                Rec 1                Street1
+                                  Models                Actual   Predicted   Actual   Predicted   Actual    Predicted
+                                   LSTM                 1.899    3.1354      1.194    2.847       10.829    9.9851
+                                   BiLSTM               1.899    3.1844      1.194    3.1662      10.829    9.2187
+                                   CNN-LSTM             1.899    2.8705      1.194    2.9528      10.829    9.2917
+                                   CNN-BiLSTM           1.899    2.7175      1.194    2.5264      10.829    9.4212
+                                   Transformer          1.899    2.8026      1.194    2.3508      10.829    9.3224
+                                   Hybrid Transformer   1.899    2.617       1.194    2.3524      10.829    9.587
+                                   CAT-Former           1.899    2.578       1.194    2.2842      10.829    9.641
+
+
+                                  Table 6. Actual and predicted energy for 1 h ahead for selected locations.
+
+
+
+
+                                  Fig. 10. One hour ahead comparison using MSE and MAE for Park 1 location.
+
+
+
+                                  CNN-LSTM model demonstrated a minor decrease in errors; However, it still surpassed the error rate of the
+                                  CNN-BiLSTM model, which had an MSE of 1.7753. The Transformer model enhanced performance, achieving
+                                  an MSE of 1.3381 and an MAE of 1.1568. The Hybrid Transformer and the proposed CAT-Former models
+                                  showed better results, with the proposed CAT-Former achieving the highest performance, shown by an MSE of
+                                  1.1885 and an MAE of 1.0901.
+                                      The performance metrics for demand prediction of the Street1 charging location across various models also
+                                  show differences in predictive accuracy, as shown in Fig. 12. The LSTM model has the largest error, with an MSE
+                                  of 3.4 and an MAE of 1.8439. BiLSTM and CNN-LSTM models improve the results, with BiLSTM attaining an
+                                  MSE of 2.5931 and CNN-LSTM lowering it even further to 2.3633. CNN-BiLSTM reduces the error to 1.9819.
+                                  The Transformer model performs similarly to CNN-BiLSTM. However, the Hybrid Transformer decreases both
+                                  errors significantly, with an MSE of 1.5425. The proposed CAT-Former model performs best, with the lowest
+                                  MSE of 1.4113 and MAE of 1.188.
+
+                                  One day ahead
+                                  For the selected three locations, one-day-ahead demand forecasting is also performed. This forecast is performed
+                                  by aggregating the data based on daily data. For the test sets, Figs. 13, 14, and 15 compare the predicted values
+                                  of each model with the actual values, including the proposed model, for the Park 1, Rec 1, and Street 1 charging
+                                  locations.
+                                      Furthermore, to evaluate the models for the demand forecast, we have implemented the models using a
+                                  specific day prediction, such as 31 st October, using the last 30 days of data for the three locations, respectively.
+                                  Table 7 shows that the three charging locations have different actual charging demands, i.e., Actual (kWh),
+                                  showing the different charging trends and demand on the same day. Table 7 also shows the predicted demand
+                                  (kWh) for the baselines and the proposed CAT-Former model for 1 day ahead predictions.
+
+Scientific Reports |   (2025) 15:36652                  | https://doi.org/10.1038/s41598-025-20557-x                                               17
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 11. One hour ahead comparison using MSE and MAE for Rec 1 location.
+
+
+
+
+                                  Fig. 12. One hour ahead comparison using MSE and MAE for Street 1 location.
+
+
+
+                                       The performance comparison for the Park 1 charging location uses the same metrics, including MSE and MAE.
+                                  The LSTM has the highest error, with an MSE of 2.7725 and an MAE of 1.6651. BiLSTM indicates a considerable
+                                  improvement, lowering the MSE to 1.3504. CNN-LSTM and CNN-BiLSTM models enhance performance, with
+                                  CNN-BiLSTM reaching an MSE of 1.1176. The Transformer model produces a more balanced output while
+                                  still outperforming the CNN-BiLSTM. The Hybrid Transformer decreases errors greatly, providing an MSE
+                                  of 0.96177, although the CAT-Former performs best with the lowest MSE of 0.83557 and MAE of 0.9141. The
+                                  comparison of results using MSE and MAE for One Day Ahead for Park 1 charging location is shown in Fig. 16.
+
+
+Scientific Reports |   (2025) 15:36652               | https://doi.org/10.1038/s41598-025-20557-x                                            18
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 13. One day ahead predictions comparison for Test Set of Park 1 location.
+
+
+
+
+                                  Fig. 14. One day ahead predictions comparison for Test Set of Rec 1 location.
+
+
+
+
+                                  Fig. 15. One day ahead predictions comparison for Test Set of Street 1 location.
+
+
+
+                                     The MSE and MAE performance evaluation for the Rec 1 charging location shows mixed performance.
+                                  LSTM has an MSE of 1.725 and an MAE of 1.3134, indicating moderate error rates. BiLSTM and CNN-LSTM
+                                  produce larger errors, with an MSE of 2.6589 and an MAE of 1.6306. CNN-BiLSTM performs marginally better,
+                                  lowering the MSE to 2.3363. The Transformer model performs significantly better, with an MSE of 0.5968 and
+                                  MAE of 0.7725. The Hybrid Transformer improves performance even further, with an MSE of 0.4844 and an
+                                  MAE of 0.6959, showing better performance than the CAT-Former model, with an MSE of 0.51552 and an MAE
+
+
+
+Scientific Reports |   (2025) 15:36652               | https://doi.org/10.1038/s41598-025-20557-x                                        19
+www.nature.com/scientificreports/
+
+
+                                  Locations             Park1                Rec 1                Street1
+                                  Models                Actual   Predicted   Actual   Predicted   Actual    Predicted
+                                   LSTM                 58.294   59.959      47.814   49.1274     42.739    41.679
+                                   BiLSTM               58.294   57.131      47.814   49.4446     42.739    41.729
+                                   CNN-LSTM             58.294   57.066      47.814   49.4446     42.739    41.727
+                                   CNN-BiLSTM           58.294   57.236      47.814   46.2855     42.739    43.762
+                                   Transformer          58.294   59.491      47.814   47.0415     42.739    43.604
+                                   Hybrid Transformer   58.294   58.274      47.814   47.118      42.739    41.996
+                                   CAT-Former           58.924   59.208      47.814   47.196      42.739    43.451
+
+
+                                  Table 7. Actual and predicted energy for 1 day ahead for selected locations.
+
+
+
+
+                                  Fig. 16. One day ahead comparison using MSE and MAE for Park 1 location.
+
+
+
+                                  of 0.718. The comparison of results using MSE and MAE for one day ahead for the Rec 1 charging location is
+                                  shown in Fig. 17.
+                                      While LSTM and BiLSTM performed with MSE values of 1.1223 and 1.0188, their error rates remain higher
+                                  than transformer models, as shown in Fig. 18. CNN-based models, such as CNN-LSTM and CNN-BiLSTM,
+                                  exhibit slightly lower errors, but their MSEs still hover around 1.0241 and 1.0465. In contrast, the Transformer
+                                  model significantly outperforms these earlier models with an MSE of 0.749, showing the effectiveness of attention
+                                  mechanisms in improving predictive accuracy. The Hybrid Transformer further refines this approach, reducing
+                                  the MSE to 0.552, while the proposed CAT-Former achieves the best performance, reaching an MSE of 0.5069.
+                                  These results underscore the superior performance of hybrid architectures, effectively capturing both temporal
+                                  dependencies and complex patterns in the data. The comparison of results using MSE and MAE for One Day
+                                  Ahead for the Street 1 charging location is shown in Fig. 18.
+
+                                  Discussion
+                                  The proposed model performance, including MAE and MSE for predicting one-hour-ahead forecasting as
+                                  compared to the best-performing baseline Hybrid Transformer model, is 11.82% and 5.75% lower for the park
+                                  1 location, 6.23% and 12.87% lower for Rec 1, and 4.54% and 9.28% lower for street 1 locations, respectively.
+                                  Furthermore, the proposed model performance for predicting one-day-ahead forecasting as compared to the
+                                  best-performing baseline Hybrid Transformer model is 7.22% and 15.08% lower for the park 1 location, 3.30%
+                                  and 6.40% higher for Rec 1, and 4.23% and 9.09% lower for the street 1 location. The results show that the
+                                  proposed CAT-Former model can utilize the temporal and contextual features effectively for different charging
+                                  locations in the city, having different charging demands and trends. The results show that the temporal and
+                                  contextual features increase the model’s efficiency in forecasting short-term charging demand. Overall, the
+
+
+Scientific Reports |   (2025) 15:36652                  | https://doi.org/10.1038/s41598-025-20557-x                                            20
+www.nature.com/scientificreports/
+
+
+
+
+                                  Fig. 17. One day ahead comparison using MSE and MAE for Rec 1 location.
+
+
+
+
+                                  Fig. 18. One day ahead comparison using MSE and MAE for Street 1 location.
+
+
+
+                                  performance of the proposed CAT-Former model for one hour and one day ahead is better than that of the
+                                  individual and hybrid traditional baseline models in most of the 1-hour and 1-day predictions for the following
+                                  charging stations. The performance of the CAT-Former compared to the Transformer model is also better.
+                                  However, the model has competitive results compared to the hybrid transformer model, which sometimes uses
+                                  an LSTM-based encoder-decoder.
+                                     As highlighted in the external factor column in Table 1 for studies22–34, the weather factor is considered in a
+                                  few studies22,28. However, most of these studies focused on the calendar features. Therefore, all the studies have
+
+
+Scientific Reports |   (2025) 15:36652                | https://doi.org/10.1038/s41598-025-20557-x                                               21
+www.nature.com/scientificreports/
+
+
+                                  performed the analysis based on the predictions focusing on different prediction periods. The following studies
+                                  don’t highlight how the weather factor contributes to the prediction accuracy for the short-term prediction.
+                                  The impact of the weather factor on medium (30 days) or long (30+) days prediction can be significant due to
+                                  different seasons. This research includes the weather factor in the contextual features, along with the charging
+                                  station location. However, based on the evaluation approaches used in the literature focusing on prediction
+                                  horizons, this proposed research also performs the analysis for the prediction horizons, such as for 1-hour and
+                                  1-day predictions.
+                                      The study uses Boulder City EV charging data, and selects three charging locations with the highest number
+                                  of charging sessions, considering the higher demand and different user behaviour in these selected locations. This
+                                  multi-location approach enables the learning framework to understand the dynamics of how charging demand
+                                  could be fluctuated over different operational conditions instead of single-site behavior. The calendar features are
+                                  considered as temporal, and location and weather features are combined and considered as contextual features.
+                                  Because of this, the model is able to construct generalized representations that are more representative of the
+                                  dynamics of real charging conditions. Considering the real-world application, the model can be applied for
+                                  predictive performance using the past charging demand data without requiring any additional data.
+                                      The CAT-Former model shows high applicability in the real world in predicting short-term EV charging
+                                  demand across different locations. With effective utilization of historical charging data, the model will be capable
+                                  of obtaining both temporal dynamics as well as contextual distinctions present in different charging stations,
+                                  e.g., Park 1, Rec 1, and Street 1, having discrete usage patterns. Compared to baseline Transformer and hybrid
+                                  models, the comparative performance attained in terms of MAE and MSE of one-hour- and one-day-ahead
+                                  forecasts demonstrates the capacity of the model to act based on the local demand patterns. This means that
+                                  CAT-Former can be considered on real charging networks, and by utilizing historical data, we can make effective
+                                  short-term forecasts that can be helpful to allocate resources better, manage stations and plan the grids across
+                                  sites in the city.
+
+                                  Conclusion
+                                  This research proposes a Context-Aware Temporal Transformer (CAT-Former) model using Temporal features
+                                  and a Multi-Head Attention Mechanism to predict the short-term charging demand of EVs. The charging demand
+                                  and behaviour at different locations tend to differ, showing the dynamic nature of EV charging. The research uses
+                                  charging data from multiple locations within a city to train and test the proposed model for demand forecasting
+                                  and evaluate short-term performance. The dataset used for the implementation is obtained from Boulder City,
+                                  Colorado, containing historical data from January 2018 to November 2023. The data is divided into a training
+                                  set from January 2018 to June 2023 and a test set from July to November 2023.
+                                      The proposed model is compared with the traditional base models, LSTM and BiLSTM, and includes hybrid
+                                  models such as CNN-LSTM and CNN-BiLSTM. The proposed model is compared with the Simple and Hybrid
+                                  Transformer models using LSTM-based Encoder-Decoder. The results show that the proposed CAT-Former
+                                  model effectively utilizes temporal and contextual features across multiple charging locations throughout the
+                                  city, indicating different charging demands and patterns. Using temporal and contextual features enhances
+                                  the model’s efficacy in predicting short-term charging requirements. The proposed CAT-Former model
+                                  performs comparatively better than the individual and hybrid standard baseline models for one-hour and one-
+                                  day predictions in most of the predictions by achieving the lowest MSE and MAE value. The CAT-Former
+                                  model performs better than the Simple Transformer model; however, it shows a competitive performance as
+                                  compared to the Hybrid Transformer. Overall, the proposed model performance for EV CS demand forecasting
+                                  is improved, and different charging locations and trends within a city can be accurately predicted.
+                                      The proposed model performance, including MAE and MSE for predicting one-hour-ahead forecasting as
+                                  compared to the best-performing baseline Hybrid Transformer model, is 11.82% and 5.75% lower for the park
+                                  1 location, 6.23% and 12.87% lower for Rec 1, and 4.54% and 9.28% lower for the street 1 location, respectively.
+                                  Furthermore, the proposed model performance for predicting one-day-ahead forecasting as compared to the
+                                  best-performing baseline Hybrid Transformer model is 7.22% and 15.08% lower for the park 1 location, 3.30%
+                                  and 6.40% higher for Rec 1, and 4.23% and 9.09% lower for the street 1 location. The results for 1 h ahead and
+                                  1 day ahead forecasting show that the CAT-Former model performs comparatively better than the baselines.
+                                  The proposed CAT-Former model can effectively make short-term predictions using temporal and contextual
+                                  features.
+                                      In the future, more recent data from other cities and external factors like road traffic and networks can be
+                                  included to observe their impact on the charging demand at various charging locations in a city.
+
+                                  Data availability
+                                  “The datasets generated and/or analyzed during the current study are available in the Electric Vehicle Charging
+                                  Station Data repository, ​h​t​t​​​​p​s​​:​/​​/​o​p​e​n​-​d​​a​t​​a​.​b​o​​u​​l​d​e​r​c​o​l​o​r​a​d​o​.​g​o​​​v​/​d​a​t​a​s​e​t​s​/​9​5​9​9​2​b​3​9​3​8​b​e​4​6​2​2​b​0​7​f​0​b​0​5​e​b​a​9​5​d​4​c​
+                                  _​0​/​e​x​p​l​o​r​e​.”​​
+
+                                  Received: 2 April 2025; Accepted: 15 September 2025
+
+
+                                  References
+                                   1. Rubino, L., Capasso, C. & Veneri, O. Review on plug-in electric vehicle charging architectures integrated with distributed energy
+                                      sources for sustainable mobility. Appl. Energy. 207, 438–464. https://doi.org/10.1016/j.apenergy.2017.06.097 (2017).
+                                   2. Chen, Q. et al. Dynamic Price Vector Formation Model-Based Automatic Demand Response Strategy for PV-Assisted EV Charging
+                                      Stations. IEEE Trans. Smart Grid 8(6), 2903–2915. https://doi.org/10.1109/TSG.2017.2693121 (2017).
+
+
+Scientific Reports |   (2025) 15:36652                              | https://doi.org/10.1038/s41598-025-20557-x                                                                                                               22
+www.nature.com/scientificreports/
+
+
+                                   3. Xu, Y., Zheng, Y. & Yang, Y. On the movement simulations of electric vehicles: A behavioral model-based approach. Appl. Energy
+                                      283, Art. no. 116356, https://doi.org/10.1016/j.apenergy.2020.116356 (2021).
+                                   4. Zhang, L., Sun, C., Cai, G. & Koh, L. H. Charging and discharging optimization strategy for electric vehicles considering elasticity
+                                      demand response. eTransp. 18, Art. no. 100262, https://doi.org/10.1016/j.etran.2023.100262 (2023).
+                                   5. Ehsani, M., Gao, Y., Longo, S. & Ebrahimi, K. Modern Electric, Hybrid Electric, and Fuel Cell Vehicles 3rd edn, CRC (2018).
+                                   6. IEA & Global, E. V. O. IEA, [Online]. (2023). https://www.iea.org/reports/global-ev-outlook-2023
+                                   7. IEA & Electric Vehicles, IEA, [Online]. (2020). https://www.iea.org/reports/electric-vehicles
+                                   8. Macioszek, E. Electric Vehicles - Problems and Issues, In TSTP, Adv. Intell. Syst. Comput., vol. 1091. Cham, Switzerland: Springer,
+                                      2020, (2019). https://doi.org/10.1007/978-3-030-35543-2_14
+                                   9. Ling, L. Z., Cherry, C. R. & Wen, Y. Determining the Factors That Influence Electric Vehicle Adoption: A Stated Preference Survey
+                                      Study in Beijing, China. Sustainability 13(21), Art. no. 11719, https://doi.org/10.3390/su132111719 (2021).
+                                  10. Dubey, A. & Santoso, S. Electric vehicle charging on residential distribution systems: impacts and mitigations. IEEE Access. 3,
+                                      1871–1893. https://doi.org/10.1109/ACCESS.2015.2476996 (2015).
+                                  11. Zhu, J. et al. Electric Vehicle Charging Load Forecasting: A Comparative Study of Deep Learning Approaches. Energies 12(14), Art.
+                                      no. 2692, https://doi.org/10.3390/en12142692 (2019).
+                                  12. Al-Ogaili, A. S. et al. Review on Scheduling, Clustering, and forecasting strategies for controlling electric vehicle charging:
+                                      challenges and recommendations. IEEE Access. 7, 128353–128371. https://doi.org/10.1109/ACCESS.2019.2939595 (2019).
+                                  13. Chaudhari, K., Kandasamy, N. K., Krishnan, A., Ukil, A. & Gooi, H. B. Agent-Based Aggregated Behavior Modeling for Electric
+                                      Vehicle Charging Load. IEEE Trans. Ind. Inform. 15(2), 856–868. https://doi.org/10.1109/TII.2018.2823321 (2019).
+                                  14. Louie, H. M. Time-Series modeling of aggregated electric vehicle charging station load. Electr. Power Compon. Syst. 45, 1498–1511.
+                                      https://doi.org/10.1080/15325008.2017.1336583 (2017).
+                                  15. Paterakis, N. G., Mocanu, E., Gibescu, M., Stappers, B. & van Alst, W. Deep learning versus traditional machine learning methods
+                                      for aggregated energy demand prediction, In 2017 IEEE PES ISGT-Europe, Turin, Italy, pp. 1–6, (2017). ​h​t​t​p​s​:​/​/​d​o​i​.​o​r​g​/​1​0​.​1​1​0​9​/​I​S​
+                                      G​T​E​u​r​o​p​e​.​2​0​1​7​.​8​2​6​0​2​8​9​​​​
+                                  16. Mamun, A. A. et al. A comprehensive review of the load forecasting techniques using single and hybrid predictive models. IEEE
+                                      Access. 8, 134911–134939. https://doi.org/10.1109/ACCESS.2020.3010702 (2020).
+                                  17. Chen, Q. & Wang, H. Time-adaptive transient stability assessment based on gated recurrent unit . Int. J. Electr. Power Energy Syst.
+                                      133, Art. no. 107156, https://doi.org/10.1016/j.ijepes.2021.107156 (2021).
+                                  18. Wu, H. & Liu, H. Non-intrusive load transient identification based on multivariate LSTM neural network and time series data
+                                      augmentation. Sustainable Energy Grids Netw. 27, Art. no. 100490, https://doi.org/10.1016/j.segan.2021.100490 (2021).
+                                  19. Li, Y., Huang, Y. & Zhang, M. Short-Term Load Forecasting for Electric Vehicle Charging Station Based on Niche Immunity Lion
+                                      Algorithm and Convolutional Neural Network. Energies 11(5), Art. no. 1253, https://doi.org/10.3390/en11051253 (2018).
+                                  20. Aduama, P., Zhang, Z. & Al-Sumaiti, A. S. Multi-Feature Data Fusion-Based Load Forecasting of Electric Vehicle Charging Stations
+                                      Using a Deep Learning Model. Energies 16(3), Art. no. 1309, https://doi.org/10.3390/en16031309 (2023).
+                                  21. Van Kriekinge, G., De Cauwer, C., Sapountzoglou, N., Coosemans, T. & Messagie, M. Day-Ahead Forecast of Electric Vehicle
+                                      Charging Demand with Deep Neural Networks. World Electr. Veh. J., 12(4), https://doi.org/10.3390/wevj12040178 (2021).
+                                  22. Elahe, E. M. F., Kabir, M. A., Mahmud, S. M. H. & Azim, R. Factors Impacting Short-Term Load Forecasting of Charging Station
+                                      to Electric Vehicle. Electronics 12(1), Art. no. 55, https://doi.org/10.3390/electronics12010055 (2023).
+                                  23. Chang, M., Bae, S., Cha, G. & Yoo, J. Aggregated Electric Vehicle Fast-Charging Power Demand Analysis and Forecast Based on
+                                      LSTM Neural Network. Sustainability 13(24), Art. no. 13783, https://doi.org/10.3390/su132413783 (2021).
+                                  24. Zhu, J., Yang, Z., Guo, Y., Zhang, J. & Yang, H. Short-Term Load Forecasting for Electric Vehicle Charging Stations Based on Deep
+                                      Learning Approaches, Appl. Sci., 9(9) Art. no. 1723, https://doi.org/10.3390/app9091723(2019).
+                                  25. Mohsenimanesh, A. et al. A Comparative Study of Deep Learning Approaches for Day-Ahead Load Forecasting of an Electric Car
+                                      Fleet, in DEXA 2021 Workshops, G. Kotsis EdsDEXA., Commun. Comput. Inf. Sci., vol. 1479. Cham, Switzerland: Springer, (2021).
+                                      https://doi.org/10.1007/978-3-030-87101-7_23
+                                  26. Di Persio, L. & Honchar, O. Analysis of recurrent neural networks for short-term energy load forecasting, In AIP Conf. Proc., vol.
+                                      1906, no. 1, Art. no. 190006, (2017). https://doi.org/10.1063/1.5012469
+                                  27. Vishnu, G. et al. Short-Term Forecasting of Electric Vehicle Load Using Time Series, Machine Learning, and Deep Learning
+                                      Techniques. World Electr. Veh. J. 14(9), Art. no. 266, https://doi.org/10.3390/wevj14090266 (2023).
+                                  28. Koohfar, S., Woldemariam, W. & Kumar, A. Prediction of electric vehicles charging demand: A Transformer-Based deep learning
+                                      Approach, Sustainability. 15(3). Art No 2105. https://doi.org/10.3390/su15032105 (2023).
+                                  29. Ge, X. et al. Data-driven spatial-temporal prediction of electric vehicle load profile considering charging behavior. Electr. Power
+                                      Syst. Res. 187, Art. no. 106469, https://doi.org/10.1016/j.epsr.2020.106469 (2020).
+                                  30. Xing, Q. et al. Urban Electric Vehicle Fast-Charging Demand Forecasting Model Based on Data-Driven Approach and Human
+                                      Decision-Making Behavior, Energies, 13(6), Art. no. 1412, (2020). https://doi.org/10.3390/en13061412
+                                  31. Luo, R., Song, Y., Huang, L., Zhang, Y. & Su, R. AST-GIN: Attribute-Augmented Spatiotemporal Graph Informer Network for
+                                      Electric Vehicle Charging Station Availability Forecasting. Sensors 23(4), Art. no. 1975, https://doi.org/10.3390/s23041975 (2023).
+                                  32. Bae, S. & Kwasinski, A. Spatial and Temporal Model of Electric Vehicle Charging Demand. IEEE Trans. Smart Grid 3(1), 394–403.
+                                      https://doi.org/10.1109/TSG.2011.2159278 (2012).
+                                  33. Paevere, P. et al. Spatio-temporal modelling of electric vehicle charging demand and impacts on peak household electrical load.
+                                      Sustain. Sci. 9, 61–76. https://doi.org/10.1007/s11625-013-0235-3 (2014).
+                                  34. Zhang, Y. et al. Spatial-temporal load forecasting of electric vehicle charging stations based on graph neural network. J. Intell. Fuzzy
+                                      Syst. 46 (1), 821–836. https://doi.org/10.3233/JIFS-231775 (2024).
+                                  35. Zhang, X., Kuenzel, S., Colombo, N. & Watkins, C. Hybrid short-term load forecasting method based on empirical wavelet
+                                      transform and bidirectional long short-term memory neural networks. J. Mod. Power Syst. Clean Energy 10(5), 1216–1228. ​h​t​t​p​s​:​/​
+                                      /​d​o​i​.​o​r​g​/​1​0​.​3​5​8​3​3​/​M​P​C​E​.​2​0​2​1​.​0​0​0​2​7​6​​​​ (2022).
+                                  36. Zhang, X. Y., Córdoba-Pachón, J. R., Guo, P., Watkins, C. & Kuenzel, S. Privacy-preserving federated learning for value-added
+                                      service model in advanced metering infrastructure. IEEE Trans. Comput. Soc. Syst. 11(1), 117–131. ​h​t​t​p​s​:​/​/​d​o​i​.​o​r​g​/​1​0​.​1​1​0​9​/​T​C​S​S​.​
+                                      2​0​2​2​.​3​2​0​4​3​6​1​​​​ (2024).
+                                  37. Ahmed, S. et al. Transformers in Time-Series analysis: A tutorial. Circuits Syst. Signal. Process. 42, 7433–7466. ​h​t​t​p​s​:​/​/​d​o​i​.​o​r​g​/​1​0​.​1​
+                                      0​0​7​/​s​0​0​0​3​4​-​0​2​3​-​0​2​4​5​4​-​8​​​​ (2023).
+
+                                  Acknowledgements
+                                  This work was supported by the Basic Science Research Program through the National Research Foundation of
+                                  Korea (NRF) funded by the Ministry of Education under Grant RS-2023-00244091. This work was also support-
+                                  ed by the Technology Innovation Program (RS-2024-00507228, Development of process upgrade technology for
+                                  AI self-manufacturing in the cement industry) funded By the Ministry of Trade, Industry & Energy(MOTIE,
+                                  Korea).
+
+
+
+
+Scientific Reports |   (2025) 15:36652                        | https://doi.org/10.1038/s41598-025-20557-x                                                                                    23
+www.nature.com/scientificreports/
+
+
+                                  Author contributions
+                                  Conceptualization, A.H.; methodology, A.H., and Q.-C. Lu.; software, A.H., and S.W.; validation, A.H., and Q.-
+                                  C. Lu.; formal analysis, Q.-C. Lu., S.S.R. and S.J.K.; investigation, A.H., and Q.-C. Lu.; resources, A.H. and S.S.R.;
+                                  data curation, A.H. and S.W.; visualization, A.H., and S.W.; supervision, Q.-C. Lu; project administration, Q.-C.
+                                  Lu. and S.J.K.; funding acquisition, S.S.R and S.J.K. writing—original draft, A.H.; writing—review and editing,
+                                  A.H. and Q.-C. Lu.; All authors have read and agreed to the published version of the manuscript.
+
+                                  Funding
+                                  This research received no external funding.
+
+                                  Declarations
+
+                                  Competing interests
+                                  The authors declare no competing interests.
+
+                                  Institutional review board
+                                  Not applicable.
+
+                                  Informed consent
+                                  Not applicable.
+
+                                  Additional information
+                                  Correspondence and requests for materials should be addressed to Q.-C.L. or S.J.K.
+                                  Reprints and permissions information is available at www.nature.com/reprints.
+                                  Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and
+                                  institutional affiliations.
+                                  Open Access This article is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives
+                                  4.0 International License, which permits any non-commercial use, sharing, distribution and reproduction in
+                                  any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide
+                                  a link to the Creative Commons licence, and indicate if you modified the licensed material. You do not have
+                                  permission under this licence to share adapted material derived from this article or parts of it. The images or
+                                  other third party material in this article are included in the article’s Creative Commons licence, unless indicated
+                                  otherwise in a credit line to the material. If material is not included in the article’s Creative Commons licence
+                                  and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to
+                                  obtain permission directly from the copyright holder. To view a copy of this licence, visit ​h​t​t​p​:​/​/​c​r​e​a​t​i​v​e​c​o​m​m​o​
+                                  n​s​.​o​r​g​/​l​i​c​e​n​s​e​s​/​b​y​-​n​c​-​n​d​/​4​.​0​/​​​​.​​
+
+                                  © The Author(s) 2025
+
+
+
+
+Scientific Reports |   (2025) 15:36652                   | https://doi.org/10.1038/s41598-025-20557-x                                                              24
+

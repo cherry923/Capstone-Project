@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GridFlow EV Forecast Detail</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=forecast-evtfm-v2-20260604" />
+  </head>
+  <body class="detail-page forecast-detail-page">
+    <main class="detail-page-shell forecast-page-shell">
+      <a class="back-link" href="dashboard.html" aria-label="대시보드로 돌아가기">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+      </a>
+
+      <section class="detail-hero forecast-hero">
+        <div>
+          <p class="eyebrow">예측 모델 상세</p>
+          <h1>PV·EV 예측값과<br />실제값 비교</h1>
+          <p>
+            PV 발전량과 EV 충전 수요 예측을<br />
+            실제 계측값과 비교합니다.
+          </p>
+        </div>
+        <div class="forecast-hero-badge">
+          <span>의사결정 입력</span>
+          <strong>Forecast-based</strong>
+          <small>1시간 단위 예측 비교</small>
+        </div>
+      </section>
+
+      <section class="panel operation-data-panel" aria-label="예측 데이터 선택">
+        <div class="operation-data-head">
+          <div>
+            <p class="eyebrow">Forecast Model</p>
+            <h2>PV·EV 예측 모델 비교</h2>
+            <p>발전량과 충전소별 수요를 선택한 주간 기준으로 확인합니다.</p>
+          </div>
+          <label class="operation-date-control">
+            <span>표시 주간</span>
+            <select id="forecast-date-select" aria-label="예측 비교 주간 선택"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="forecast-metric-grid" id="forecast-metric-grid" aria-label="예측 성능 요약"></section>
+
+      <section class="forecast-chart-grid">
+        <article class="panel forecast-chart-card forecast-chart-wide">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">PV Forecast</p>
+              <h3>시간대별 PV 실제·예측 발전량</h3>
+            </div>
+            <span class="forecast-chip" id="forecast-pv-date-chip">date</span>
+          </div>
+          <div id="forecast-pv-chart"></div>
+        </article>
+
+        <article class="panel forecast-chart-card forecast-chart-wide">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">Station EV Demand</p>
+              <h3>충전소별 EV 수요 패턴</h3>
+            </div>
+            <span class="forecast-chip">실선 실제 · 점선 예측</span>
+          </div>
+          <div id="forecast-station-chart"></div>
+        </article>
+      </section>
+    </main>
+
+    <script src="auth.js"></script>
+    <script src="assets/operation-comparison/evonly_vmoderate_v2p90_pvess_multiseed.js?v=actual-grid-trace-20260604"></script>
+    <script src="forecast-detail.js?v=forecast-week-20260604"></script>
+  </body>
+</html>

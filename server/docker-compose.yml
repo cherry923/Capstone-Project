@@ -1,0 +1,83 @@
+services:
+  backend:
+    build: .
+    container_name: ev-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      AI_MODULE_URL: http://ai:8000
+      AI_DISPATCH_DEMO_OPEN_ENABLED: "true"
+
+      MQTT_ENABLED: ${MQTT_ENABLED:-false}
+      BROKER_URL: ${BROKER_URL:-tcp://mqtt:1883}
+      MQTT_INBOUND_CLIENT_ID: ${MQTT_INBOUND_CLIENT_ID:-spring-boot-receiver}
+      MQTT_INBOUND_TOPIC: ${MQTT_INBOUND_TOPIC:-iot.data/+/+/telemetry}
+      MQTT_OUTBOUND_CLIENT_ID: ${MQTT_OUTBOUND_CLIENT_ID:-spring-boot-sender}
+      MQTT_OUTBOUND_TOPIC: ${MQTT_OUTBOUND_TOPIC:-iot.control/ess/update}
+      DASHBOARD_TIMELAPSE_MQTT_LIVE_TOPIC_ENABLED: ${DASHBOARD_TIMELAPSE_MQTT_LIVE_TOPIC_ENABLED:-false}
+
+      MQTT_HOST: mqtt
+      MQTT_PORT: 1883
+
+      DB_URL: jdbc:postgresql://postgres:5432/evdb
+      DB_USERNAME: ev
+      DB_PASSWORD: ev_password
+    depends_on:
+      - postgres
+      - redis
+      - ai
+      - mqtt
+    restart: always
+
+  ai:
+    build:
+      context: ../ai
+    container_name: ev-ai
+    ports:
+      - "8000:8000"
+    restart: always
+
+  postgres:
+    image: postgres:16
+    container_name: ev-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: evdb
+      POSTGRES_USER: ev
+      POSTGRES_PASSWORD: ev_password
+    volumes:
+      - ev-postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7
+    container_name: ev-redis
+    restart: always
+
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: ev-mqtt
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: always
+
+
+#  frontend:
+ #   build: ./frontend
+  #  container_name: ev-frontend
+   # ports:
+    #  - "80:80"
+   # depends_on:
+    #  - backend
+   # restart: always
+
+volumes:
+  ev-postgres-data:

@@ -1,0 +1,68 @@
+spring:
+  config:
+    import: optional:file:./.env[.properties]
+
+  application:
+    name: multi-ev-charging-management-system
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+external:
+  weather:
+    asos:
+      base-url: https://apis.data.go.kr/1360000/AsosHourlyInfoService
+      service-key: ${ASOS_SERVICE_KEY}
+    kma-solar-nwp:
+      base-url: https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph_sun_nwp_txt
+      auth-key: ${KMA_APIHUB_AUTH_KEY:}
+      nwp: ${KMA_SOLAR_NWP_MODEL:KIMG}
+      default-latitude: ${KMA_SOLAR_NWP_DEFAULT_LATITUDE:33.499621}
+      default-longitude: ${KMA_SOLAR_NWP_DEFAULT_LONGITUDE:126.531188}
+
+  ai:
+    base-url: ${AI_MODULE_URL:http://localhost:8000}
+    dispatch:
+      demo-open-enabled: ${AI_DISPATCH_DEMO_OPEN_ENABLED:false}
+
+  mqtt:
+    enabled: ${MQTT_ENABLED:false}
+    broker-url: ${BROKER_URL:}
+
+    inbound:
+      client-id: ${MQTT_INBOUND_CLIENT_ID:local-inbound-client}
+      topic: ${MQTT_INBOUND_TOPIC:test/inbound}
+
+    outbound:
+      client-id: ${MQTT_OUTBOUND_CLIENT_ID:local-outbound-client}
+      default-topic: ${MQTT_OUTBOUND_TOPIC:test/outbound}
+
+app:
+  dashboard:
+    timelapse:
+      mqtt-live-topic-enabled: ${DASHBOARD_TIMELAPSE_MQTT_LIVE_TOPIC_ENABLED:false}
+
+  admin:
+    username: ${ADMIN_USERNAME:admin}
+    password: ${ADMIN_PASSWORD:admin1234}
+
+  cors:
+    allowed-origins: ${FRONTEND_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://localhost:4173,http://127.0.0.1:4173,http://localhost:4177,http://127.0.0.1:4177,http://localhost:4188,http://127.0.0.1:4188,http://localhost:5500,http://127.0.0.1:5500,http://localhost:5501,http://127.0.0.1:5501,http://localhost:5502,http://127.0.0.1:5502}

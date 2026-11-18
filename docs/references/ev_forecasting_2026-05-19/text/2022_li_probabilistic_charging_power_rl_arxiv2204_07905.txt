@@ -1,0 +1,1090 @@
+                                                                                                                                                                                            1
+
+
+
+
+                                                Probabilistic Charging Power Forecast of EVCS:
+                                                Reinforcement Learning Assisted Deep Learning
+                                                                    Approach
+                                                                   Yuanzheng Li, Member IEEE, Shangyang He, Yang Li, Senior Member IEEE,
+                                                                            Leijiao Ge, Suhua Lou, and Zhigang Zeng, Fellow IEEE
+
+
+
+
+arXiv:2204.07905v1 [eess.SY] 17 Apr 2022
+                                              Abstract—The electric vehicle (EV) and electric vehicle charg-                another effective approach to reduce carbon emissions [1].
+                                           ing station (EVCS) have been widely deployed with the devel-                     Due to the development of manufacture and related key
+                                           opment of large-scale transportation electrifications. However,                  technologies, the reliability and efficiency of electric vehicles
+                                           since charging behaviors of EVs show large uncertainties, the
+                                           forecasting of EVCS charging power is non-trivial. This paper                    (EVs) are significantly improved. Therefore, various countries
+                                           tackles this issue by proposing a reinforcement learning assisted                aim to achieve a high EV penetration in the near future. It
+                                           deep learning framework for the probabilistic EVCS charging                      is predicted that the number of EVs will increase continually
+                                           power forecasting to capture its uncertainties. Since the EVCS                   and may approximately reach 35 million at the end of 2022
+                                           charging power data are not standard time-series data like                       throughout the world [2].
+                                           electricity load, they are first converted to the time-series format.
+                                           On this basis, one of the most popular deep learning models,                        However, as one of the most important factors to expand the
+                                           the long short-term memory (LSTM) is used and trained to                         EV adoption, EV charging has brought great challenges to the
+                                           obtain the point forecast of EVCS charging power. To further                     secure and economic operations of the EV charging station
+                                           capture the forecast uncertainty, a Markov decision process                      (EVCS). Because the charging behavior of EV is with the
+                                           (MDP) is employed to model the change of LSTM cell states,                       nature of intrinsic randomness, the charging power of EVCS
+                                           which is solved by our proposed adaptive exploration proximal
+                                           policy optimization (AePPO) algorithm based on reinforcement                     is uncertain [3]. Consequently, it is considered as a volatile
+                                           learning. Finally, experiments are carried out on the real EVCSs                 and uncertain electricity load. Fluctuations of such load may
+                                           charging data from Caltech, and Jet Propulsion Laboratory,                       threaten the operational security of EVCS and corresponding
+                                           USA, respectively. The results and comparative analysis verify the               power systems [4]. To prevent these issues, it is crucial to well
+                                           effectiveness and outperformance of our proposed framework.                      predict the EVCS charging power.
+                                              Index Terms—Electric vehicle charging station, probabilistic                     Current works about EVCS or EV charging power fore-
+                                           charging power forecasting, reinforcement learning, deep learn-                  casting can be divided into two main categories, namely, the
+                                           ing, forecast uncertainty.                                                       model-based and data-driven approaches. Different from the
+                                                                                                                            wind power and residential load power forecasting that are
+                                                                     I. I NTRODUCTION                                       mainly influenced by the natural environment and the living
+                                                 S one of the most essential actions, the carbon emission                   habits of residents, the charging behavior of the EV users is
+                                           A     reduction has been adopted to address the problem of
+                                           climate change. Therefore, renewable energy sources, such as
+                                                                                                                            the focus on the first category. Ref. [5] has employed the
+                                                                                                                            trip chain to establish a spatial-temporal behavior model of
+                                           wind and solar energy, are widely deployed to substitute fossil                  EVs, which is beneficial for forecasting their charging power.
+                                           fuels. Besides, the electrification of transportation systems is                 Considering the impacts of traffic on the charging behavior,
+                                                                                                                            Ref. [6] has provided a reliable approach for EVCS charging
+                                              This work was supported in part by the National Natural Science Foundation    power forecasting. Based on the case in Shenzhen, China,
+                                           of China under Grant 62073148, in part by Natural Science Foundation of          the charging behaviors of EVs are considered for systematic
+                                           Jilin Province, China under Grant No. YDZJ202101ZYTS149, and in part by
+                                           the 111 Project on Computational Intelligence and Intelligent Control under      forecasting of EV charging power [7].
+                                           Grant B18024. (Corresponding author: Yang Li)                                       Thanks to the advent of the cloud services and the internet
+                                              Y. Z. Li and Z. G. Zeng are with School of Artificial Intelligence and        of things, massive charging process data, such as the charging
+                                           Automation, Key Laboratory on Image Information Processing and Intelligent
+                                           Control of Ministry of Education, Huazhong University of Science and Tech-       time and energy of EVs, can be collected. Thus, data-driven
+                                           nology, Wuhan 430074, and also with China-Belt and Road Joint Laboratory         algorithms could be used for the forecast of EVCS charging
+                                           on Measurement and Control Technology, Wuhan, China, 430074 (Email:              power [8]. Some classical data-driven forecasting algorithms
+                                           Yuanzheng Li@hust.edu.cn, zgzeng@hust.edu.cn).
+                                              S. Y. He is with China-EU Institute for Clean and Renewable Energy,           are widely employed. For instance, [9] has applied an au-
+                                           Huazhong University of Science and Technology, Wuhan 430074, China               toregressive integrated moving average (ARIMA) model to
+                                           (Email: heshangyang10@hust.edu.cn).                                              forecast the charging power of massive EVCSs, which were
+                                              Y. Li is with School of Electrical Engineering, Northeast Electric Power
+                                           University, Jilin 132012, China (Email:liyang@neepu.edu.cn).                     distributed in Washington State and San Diego. Ref. [10] has
+                                              L. J. Ge is with the Key Laboratory of Smart Grid of Ministry of Education,   combined the least squares support vector machine algorithm
+                                           Tianjin University, Tianjin, 300072 China (Email:legendglj99@tju.edu.cn).        and fuzzy clustering for the EVCS charging power forecasting
+                                              S. H. Lou is with School of Electrical and Electronic Engineering,
+                                           Huazhong University of Science and Technology, Wuhan 430074, China               task. Based on the historical data of Nebraska, USA, the
+                                           (Email: shlou@mail.hust.edu.cn).                                                 effectiveness of the extreme gradient boosting on the charging
+                                                                                                                                   2
+
+
+
+power forecasting has been validated in [11].                      time-series data. Then, this change could be modelled as a
+   The above algorithms rely on the structured input data          Markov decision process (MDP). In this way, we innovatively
+with a specific human-defined feature, which requires cumber-      introduce the reinforcement learning algorithm to assist the
+some engineering-based efforts [12]. Hence, the deep learning      LSTM in order to obtain the forecast uncertainty. The reason
+method [13] becomes more popular in this field. For instance,      for selecting reinforcement learning is that it is a powerful
+Ref. [12] has reviewed numerous deep learning methods for          technique to improve the artificial target by the autonomous
+EV charging load forecasting, and concluded that the long          learning without using any prior knowledge [20]. Here, the
+short-term memory (LSTM) model could reduce by about 30%           target is to obtain the effective probabilistic forecast, and the
+forecasting error compared with the conventional artificial        reinforcement learning is used to learn the forecast uncertainty
+neural networks (ANN) model. Considering the temporal              by observing cell states of the LSTM.
+dependency of the data, Ref. [14] has implemented the LSTM            The contributions of this paper are shown as follows:
+to capture the peak of charging power and achieve an effective        1) A reinforcement learning assisted deep learning frame-
+result. Ref. [15] has introduced the LSTM network to build         work is proposed for probabilistic EVCS charging power
+a hybrid model for the forecasting of EVCS charging power          forecasting. To the authors’ best knowledge, this is the first
+and the experimental results demonstrated its effectiveness.       paper that uses the reinforcement learning algorithm to ob-
+Besides, compared with ARIMA and ANN, Ref. [16] has also           tain forecast uncertainty in the field of EV charging power
+illustrated the advantage of LSTM with abundant experiments.       forecasting.
+   Note that the above algorithms have been used to conduct           2) We model the variation of LSTM cell state as a MDP,
+the point forecasting, which only provides an expected charg-      which is solved by proximal policy optimization (PPO) to
+ing power of EVCS in the future. Therefore, the probabilistic      obtain the forecast uncertainty. In this case, the expected value
+forecasting is introduced. It could forecast the probabilistic     of the EVCS charging power is forecasted by the LSTM, while
+distribution of the future charging power, and thus provide        the forecast uncertainty are yielded by the PPO.
+more information, i.e., the expected value and the forecast           3) An adaptive exploration PPO (AePPO) is further pro-
+uncertainties [17] [18]. Consequently, the probabilistic fore-     posed. This would help adaptively balance the exploration
+casting of EVCS charging power is conducted in this paper. To      and the exploitation during the training of PPO, which could
+the best of our knowledge, there exist only a few works about      improve its performance and help prevent it from getting
+this topic. For instance, Ref. [17] has applied four quantiles     trapped into local optima.
+regression algorithms to the probabilistic EV load forecasting.       4) A data transformer method is developed to obtain the
+In addition, the deep learning method is used in Ref. [18] to      information of EVCS from distributed charger recordings, i.e.,
+capture uncertainties of the probabilistic forecasting.            charging sessions for the LSTM training. It aggregates the
+   However, the above quantiles regression and deep learning-      charging sessions and transforms them into the time-series
+based methods have disadvantages. Regarding the first method,      format that includes the information of charging process, i.e.,
+several steps are needed to be taken under different quan-         the charging power, utilization time and demand satisfaction
+tiles to obtain the forecast distribution, which would bring       rate.
+about much computational burden [17]. For deep learning, the          The remainder of this paper is organized as follows. Section
+forecast uncertainty is mainly caused by the model training        II presents our proposed framework for EVCS charging power
+and input data [18] [19]. Indeed, the stochastic parameters        forecasting. In Section III, a data transformer method is pro-
+are normally introduced in the deep learning model, and the        posed to preprocess the charging data. Section IV introduces
+uncertainty is estimated through statistical indicators of its     the LSTM, the MDP model of the cell state variation and the
+outputs. Therefore, the uncertainty of probabilistic forecast is   original PPO. In Section V, the AePPO is proposed, and the
+usually obtained by using adequate samples, which needs the        case studies are conducted in Section VI. Finally, Section VII
+repeated running of the deep learning model and the usage of       concludes this paper.
+input data. In other words, traditional approaches may lead to
+a huge computation complexity.                                                            II. F RAMEWORK
+   Consequently, we propose an approach to solve the above
+                                                                   A. Problem Formulation
+issue. That is, a reinforcement learning assisted deep learning
+forecast approach is adopted to directly obtain the forecast        The target of our studied probabilistic forecast problem is
+uncertainty. This approach is designed to calculate the uncer-     modelled by following formulations.
+tainty once only, instead of repeated running. In detail, the
+                                                                                          Fet+1 = Êt+1 +                      (1)
+LSTM is used to obtain the point prediction results of EVCS
+charging power, which is deemed as the expected value of the                                ∼ N (0, δt+1 )                     (2)
+forecasting probabilistic distribution. Furthermore, note that
+the cell state of LSTM is one of the core inherent parameters,                             Êt+1 = f (Xt )                      (3)
+which could represent the important information of the model                              δt+1 = g(f, Xt )                      (4)
+and the input data, simultaneously. Therefore, the forecast
+uncertainty can be obtained from the cell state (this issue        where Fet+1 is the probabilistic forecast of EVCS charging
+is explained in Section IV). As such state is varying from         power at time t + 1. Êt+1 is the expectation of the forecast
+the input data, the forecast uncertainty also changes with the     values, which is obtained by the point forecast function f (·),
+                                                                                                                                         3
+
+
+
+as shown in (3) [19].  represents the noise, which stands
+for the uncertainty between the forecast and real values. In
+this paper, it is assumed that the  is Gaussian distributed
+with variance δt+1 , which is obtained by the variance forecast
+function g(·), presented in (4). It has been proved that the time
+series models based on the Gaussian distribution assumption
+can be applied to obtain a satisfactory performance [21]. Note
+that f (·) and g(·) represent the LSTM and our proposed
+AePPO, respectively. In addition, Xt = {xt−T , ..., xt−1 , xt } is
+the vector of input features of the two functions. It stands for
+the features of T timestamps before t + 1, whereas xt ∼ NNf
+(NNf denotes the Nf dimensional integer space).
+   Generally, f (·) provides a point forecast which represents
+the mean value of our target [22]. However, the obtained
+results might be unreliable since its inherent parameters are
+learned by the stochastic gradient descent optimization method
+such as Adam [18] and its input data Xt is related to the
+stochastic situation, i.e., the charging behavior of EV users.
+Therefore, it is necessary to quantify the uncertainty of f (·)
+and Xt , and the introduction of the noise  is one of the most
+effective approaches [21], [23].
+   Usually, the δt+1 is forecasted through statistical indicators,
+which requires a massive repeated running of f (Xt ) and thus
+leads to a huge computation complexity [19]. Consequently, it        Fig. 1. The overall structure of the proposed forecast framework.
+is expected to design a function g(·) to forecast the variance
+δt+1 without the repeated running. The g(·) should have the
+ability to capture the uncertainty of f (·) and Xt , which means     period between the arrival and departure of an EV user [17].
+the input of g(·) has to contain the characteristics of both point   Since all chargers may work simultaneously, the charging
+forecast model and data. Compared with other deep learning           information of EVCS is obtained by recordings of chargers. In
+algorithms, such as ANN and conventional neural network, the         this paper, such recording is termed as the charging session.
+LSTM owns a unique structural parameter, i.e., the cell state,       It consists of the period during the process of EV charging,
+which is the core parameter of LSTM and is also determined           i.e., the arrival and departure time of the EV, and the related
+by the Xt . Therefore, the uncertainties coming from both f (·)      data about the energy information, for instance, the demand
+and Xt would make changes to the value of cell state, which          and remaining energy of the corresponding EV. Note that one
+could be captured by the g(·) to forecast δt+1 . Besides, since      charging session only contains partial charging information
+the value of cell state is affected by its previous value, the       of EVCS and the period between different charging sessions
+change is modelled as a MDP in this paper. Therefore, the            may overlap. The information in charging session during the
+cell state is denoted as the state of the MDP, and the δt+1          overlap period should be gathered to derive the data of EVCS
+is defined as the action. In this way, a reinforcement learning      for LSTM training. In this case, the charging session data
+model, AePPO, is developed as g(·) to observe the cell state         should be pre-processed by aggregating the information and
+and generate the action, i.e., the δt+1 . Generally, when the        transforming them into the time-series format with different
+LSTM is applied to produce Êt+1 , the cell state would be           features, such as the charging power, utility time and demand
+produced, and the AePPO would capture it to determine δt+1 .         satisfaction rate.
+Then, the probabilistic forecast can be constructed by Êt+1            During the training process shown in Fig. 1(b), the LSTM
+and δt+1 .                                                           and AePPO are separately trained. At first, the EVCS data
+                                                                     is used to train LSTM. Then, for the well-trained LSTM, its
+B. The Probabilistic Forecast Framework of EVCS Charging             variation of cell state is modeled as a MDP. By doing so,
+Power                                                                AePPO could produce the action and interact with the LSTM
+   As discussed above, the LSTM and AePPO are trained                according to the state. Afterwards, the reward is calculated
+and utilized to obtain the mean and variance values for              based on the state and action, which is used for the training
+obtaining the predicted probabilistic distribution of EVCS           of AePPO.
+charging power. In order to implement this procedure, we                Finally, the last part of this framework is the utilization,
+propose a probabilistic forecast framework, as shown in Fig. 1.      as shown in Fig. 1(c). The LSTM and AePPO models are
+It contains three parts, preprocessing, training, and utilization.   utilized here. That is, the LSTM provides the mean value
+They are presented by the three sub-figures in Fig. 1, which         of probabilistic forecast distribution Êt+1 , while AePPO is
+are denoted as (a), (b) and (c), respectively.                       used to determine the variation δt+1 based on the cell state
+   As illustrated in Fig. 1(a), an EVCS has numerous chargers        of LSTM. In this way, the predicted probabilistic distribution
+which record the information about charging power in the             Fet+1 could be obtained by Eq. (1).
+                                                                                                                                                  4
+
+
+
+              III. DATA T RANSFORMER M ETHOD                            Then, considering Nc chargers are set in the EVCS, the
+   In this section, the data transformer method is introduced to     features split by timestamp are aggregated by the following
+extract the charging information of EVCS from charging ses-          equations:
+sions, including the delivery energy, utility time and demand                   Nc
+                                                                                X                        Nc
+                                                                                                         X                         Nc
+                                                                                                                                   X
+satisfaction rate. Then, they are aggregated into the time-series        Et =          k
+                                                                                      Edeli,t ,   Tt =          k
+                                                                                                               Tutil,t ,   Dt =          Dtk    (8)
+format for the training of LSTM.                                                k=1                      k=1                       k=1
+   Usually, the charging session data is composed by a series
+of time and energy information which is recorded during                 After aggregation, the three features are used for the training
+the charging process of the EV. An example of a charging             of LSTM. They could summarize the information of time
+session recorded by the kth charger is illustrated in Fig.           and energy contained in the charging session data. On the
+2. The time information includes tarr , tdc and tde , which          one hand, the delivery energy measures the service quality
+denote the time when EV is connected to the charger, done            of the EVCS in terms of time. On the other hand, the time
+charging and departure. Besides, the energy information is           information of the charging process is summarized by the
+also recorded, including earr , edc and ede , which represent        demand satisfaction rate and utilization time. In this way, they
+the remaining energy in the EV battery at tarr , tdc and tde ,       are selected as the features for the training of LSTM, aiming
+respectively. Furthermore, the charging session also contains        to promote its performance. Therefore, the number of features
+the user demand, termed as euser . Note that expect the above        Nf is 3 in this paper, and the input feature vector at timestamp
+information, the energy et at the end of timestamp t is also         t is denoted by xt = [Et , Tt , Dt ].
+recorded.
+                                                                          IV. R EINFORCEMENT L EARNING A SSISTED D EEP
+                                                                                      L EARNING A LGORITHM
+                                                                        This section presents the reinforcement learning assisted
+                                                                     deep learning algorithm. In the first subsection, the LSTM
+                                                                     is introduced to forecast the mean value of charging power
+                                                                     with the aggregated time-series data. Then, the variation of
+                                                                     the LSTM cell state is modeled as a MDP in the second
+                                                                     subsection. In the last subsection, the PPO is used to solve
+                                                                     the MDP, and obtain the variance of the forecasts.
+
+
+                                                                     A. Long Short Term Memory
+                                                                        In this paper, in order to obtain the mean value of EVCS
+Fig. 2. The charging session recorded by charger k.                  charging power for the forecast of probabilistic distribution,
+                                                                     the LSTM is applied. Compared with other deep learning
+   However, it is difficult to use the original charging session     algorithms, such as the fully connected network, convolutional
+data for the forecasting of EVCS charging power. The charging        neural network and vanilla recurrent neural network, LSTM is
+session focuses on a single EV, which only contains partial          more capable of learning the long-term dependencies inherent
+information of the EVCS since numerous EVs may charge at             to the time-series data and would not suffer from the vanishing
+the same time.                                                       gradients [23]. Besides, Overall, the LSTM is formulated as
+   Therefore, the charging session is manually split by times-       follows.
+tamps, and each of the timestamps represents 1 hour, as
+                                                                                           yt+1 = A (Xt , yt , ct )              (9)
+illustrated in Fig. 2. Three features are defined to summa-
+rize the charging information in each timestamp t, i.e., the         where yt+1 represents the output of LSTM at time t+1, which
+                      k
+delivery energy Edeli,t  , the demand satisfaction rate Dtk and      stands for the predicted mean value of EVCS charging power.
+                        k
+the utilization time Tutil,t . They are formulated as follows.       The LSTM model A takes Xt , yt and ct as inputs, which
+                                                                    denote the input data, the output and the cell state of LSTM
+                      et − earr ,    tarr < t < tarr + 1
+            k                                                        at time t, respectively.
+          Edeli,t =     et − et−1 , tarr + 1 ≤ t < tdc         (5)
+                     
+                        0,                  tdc ≤ t < tde               For clarity, the formulations of the LSTM is referred as
+                                                                    follows.
+              k          t − tarr , tarr < t < tarr + 1
+            Tutil,t =                                          (6)                       it+1 = σ (Wi · [yt , Xt ] + bi )                      (10)
+                         1,         tarr + 1 ≤ t < tde
+                                  k                                                     ft+1 = σ (Wf · [yt , Xt ] + bf )                       (11)
+                               Edeli,t
+                     Dtk =                × 100%              (7)                       ot+1 = σ (Wo · [yt , Xt ] + bo )                       (12)
+                             euser − earr
+                                                                                   c̃t+1 = tanh (Wc · [yt + Xt ] + bc )                        (13)
+where k indicates the charger. Examples of these features are
+shown in Fig. 2, where the charging session is split into 6                            ct+1 = ft+1        ct + it+1        c̃t+1               (14)
+timestamps.                                                                               yt+1 = ot+1          tanh (ct+1 )                    (15)
+                                                                                                                                              5
+
+
+
+where [Wi , Wf , Wo , Wc ] are the learnable weight metrics and            determines the output of LSTM but also be obtained by the
+[bi , bf , bo , bc ] are the learnable bias metric. σ, tanh are the sig-   cell state of the previous time. Therefore, st is set as ct and
+moid and hyperbolic tangent activation functions. Their output             the state space equals to all the possible value of ct .
+range is (0, 1).            indicates the elementwise multiplication.         4) Action: As the uncertainty of the model and input data are
+it+1 , ft+1 , ot+1 stand for the input, forget and output gate,            contained in st , it is expected that the agent can capture this
+respectively. c̃t+1 represents the candidate information of the            uncertainty to produce the variance of the forecast distribution,
+inputs in ct+1 , i.e., the cell state.                                     i.e., the action at = δt .
+   It can be seen from Eqs. (14) and (15) that the value of                   5) Reward: The reward r(st , at ) indicates the evaluation
+the cell state highly influences yt+1 . Besides, these equations           index of at on the basis of the st . It gives feedback to the agent
+also show that the cell state is determined by the learnable               about the performance of its action, which could be used to
+parameters and the input data Xt , and they are affected by the            update the agent. Since our target is to obtain the probabilistic
+uncertainty from the model and user’s behaviour, respectively.             distribution of future charging power, which is constructed by
+Wherein, the uncertainty of the LSTM model comes from the                  the output of the environment, i.e., LSTM and the agent’s
+learnable parameters, which are determined by the stochastic               action. In our case, the reward is designed to evaluate the
+gradient descent optimization method. In addition, since Xt                performance of the predicted distribution.
+is aggregated by the charging session data, it is uncertain as                To quantify it, the continuous ranked probability score
+well because of correlations with the behaviour of users.                  (CRPS) is introduced to measure of performance for prob-
+                                                                           abilistic forecasts, i.e., the accuracy of the predicted proba-
+                                                                           bilistic distribution [24]. The details of CRPS calculation are
+B. The Modeling of LSTM Cell State Variation
+                                                                           given in the Appendix A.
+   As described above, the input of LSTM Xt is the time-                      Note that the lower CRPS represents the more accurate
+series format, which reflects the behavior of the users. Besides,          probabilistic forecast. Therefore, the reward is defined as
+because of the recurrent structure of the LSTM, the cell state             r = −ζ × CRPS, which should be maximized by the agent. ζ
+is influenced by its previous value. Therefore, the variation of           stands for the shrinkage coefficient, which is set as 0.75.
+the LSTM cell state is caused by the uncertainty that comes
+from both the model and the data. In this case, the variation              C. Proximal Policy Optimization
+of the cell state should be modelled to extract the variance
+                                                                              Based on the MDP, a recent reinforcement learning al-
+of the probabilistic forecast distribution from the LSTM cell
+                                                                           gorithm, called PPO, is introduced to train the agent for
+state. Since the cell state is determined by its previous state,
+                                                                           generating the optimal policy π(ak |sk ). The PPO contains two
+its variation can be modelled as a MDP. Normally, the MDP
+                                                                           types of deep neural networks, which are termed as actor and
+is represented by a tuple hS, A, P, Ri. S is the state space
+                                                                           critic. The actor works as the agent, and it produces the action
+that stands for all possible states of the environment. A
+                                                                           by a policy π with parameter θπ . On the other hand, the critic
+represents the action space, i.e., the agent interacts with the
+                                                                           is used to evaluate the performance of actor, parametrized
+environment to produce action a ∈ A for the guidance of state
+                                                                           by θQ . The critic approximates the value function V πk (sk ),
+transition. P = {p(st+1 |st , at )} stands for the set of transition
+                                                                           which evaluates the value of the state sk , i.e., it represents
+probability, and R = r(st , at ), R ∈ R; S × A → R depends
+                                                                           the expectation of the reward from k to the end of the MDP,
+on the state and action and is termed as the reward. In our
+                                                                           which can be formulated as follows.
+problem, the MDP can be formulated as follows:
+   1) Environment: The environment produces the state st and                                  V πk (s) = Eπ [Uk |Sk = s]                  (16)
+computes the reward rt based on the action at of the agent. In
+this paper, the variance of the probabilistic forecast distribution        where Uk is the return function, which is defined as the
+is obtained from the variation of the cell state, which is the             discounted cumulative reward from state sk .
+most representative parameter of the LSTM. The definition                                                     T
+                                                                                                              X
+requires a premise, namely, the LSTM model is well-trained                                       Uk (sk ) =         γ × rt                (17)
+and its learnable parameters are fixed. The promise ensures                                                   t=k
+
+the decisive position of the cell state in the model, therefore,           where γ ∈ [0, 1] stands for the discount factor, rt denotes the
+a well-trained LSTM is defined as the environment of MDP.                  value of reward and T is the finite time horizontal of the MDP.
+   2) Agent: Here, the agent stands for a policy to obtain the                The main target of the PPO is to train the actor and critic,
+action from observing the state. Besides, the agent could imply            by learning from the experience tuples hsk , ak , rk , sk+1 i.
+the self-learning from its experience to gradually improve the             It is obtained by the interaction between the actor and
+policy.                                                                    the environment. The actor generates a Normal distribution
+   3) State: The definition of the state st at time t should follow        N (ak,mean , ak,var ) after observing sk . That is, the action ak is
+two criteria. First, the state should be the most representative           sampled from this distribution, i.e., ak ∼ N (ak,mean , ak,var ).
+parameter of the environment. Second, the state should only                Therefore, this introduces randomness in the produced action
+be related to the previous state and not affected by the next              and thus create more diverse actions when observing the same
+state, namely, the non-aftereffect property. According to the              state. In this way, it leads to the diversity of rewards since
+calculation process of LSTM shown in Eqs. (10)∼(15), the                   they are related to the action. This mechanism is termed as
+most suitable parameter is the cell state, which not only                  the exploration of PPO, which is used to enrich the experience
+                                                                                                                                                    6
+
+
+
+tuple in order to prevent the actor from getting trapped in local           Note that exploration and exploitation are usually contra-
+optima.                                                                  dictory. Ideally, the reinforcement learning algorithm focuses
+  Then, based on the prediction of the mean value yk obtained            on its exploration in the early stage of the training to obtain
+by LSTM, the predicted probabilistic distribution N (yk , ak ) is        sufficient experiences. However, if the algorithm keeps a
+constructed. Afterwards, rk could be calculated by the reward            high exploration, it is hard to be convergent because of its
+function to evaluate N (yk , ak ), and the state at the next time        high randomness. In this case, the exploration will shrink
+sk+1 is also restored. With the experience tuple, the parameters         according to the training. Thus, the degree of exploitation is
+of both networks are updated by following equations.                     increased. Consequently, the explored experiences should be
+                  π                                                      fully utilized to help the actor and critic converge. However,
+                 θk+1 = θkπ + ηπ ∇s,a∼πk LCLIP                    (18)
+                                                                         the practical training process of PPO is different from the
+                     Q
+                    θk+1 = θkQ + ηQ ∇θQk LQ                       (19)   ideal one. Since ak,var of PPO is generated by the actor,
+                                                                         which means the degree of exploration is uncontrollable. ak,var
+where ηπ and ηQ denote the learning rates of actor and critic,
+                                                                         is dependent on both the initial condition (set manually)
+respectively. LCLIP and LQ stand for the loss functions of the
+                                                                         and the inherent parameters of actor, which is difficult to
+two networks, which are given by
+                                                                        converge. Thus it may cause higher exploitation prematurely.
+             CLIP                       πk (a | s) πk                    The consequence of lacking enough exploration is the lower
+           L      = Es,a∼πk min(                     A ,
+                                       πk−1 (a | s) s,a                  diversity of the experiences. In this way, the PPO may get
+                                                                (20)
+                      πk (a | s)                                         trapped in the local optima.
+               clip(              , 1 − , 1 + )Aπs,ak
+                                                        )
+                     πk−1 (a | s)                                           To tackle this issue, we propose an adaptive exploration
+                                                                         mechanism for PPO to dynamically balance its exploration
+   L = Es,a∼πk (γV πk (sk+1 ) + r(sk , ak ) − V πk (sk ))2
+     Q
+                                                                
+                                                                         and exploitation. This mechanism is termed as the adaptive
+                                                                 (21)
+                                                                         exploration proximal policy optimization (AePPO). In the
+where πk−1 (a | s) denotes the policy of (k−1)th iteration, and
+                                                                         AePPO, the action is sampled from N (ak,mean , aAePPO
+                                                                                                                            k,var ) where
+γ is the discount rate. clip(t, tmin , tmax ) is the clip function. It
+                                                                         ak,mean is generated by the actor and aAePPO   is determined by
+returns tmax if t > tmax , and tmin if t < tmin . Aπs,a     k
+                                                               is the                                             k,var
+                                                                         our proposed adaptive exploration mechanism.
+advantage of action a under state s, which is represented by
+the difference between a and the averaged performance of the                Using such a mechanism, the exploration of AePPO is
+actor, formulated as follows.                                            increased in the earlier training stage and then is gradually
+                                                                         shrunk to enhance the exploitation of the experiences. It is
+                  Aπs,a
+                     k
+                        = Q(sk , ak ) − V πk (sk )                (22)   inadvisable to achieve this target by gradually reducing the
+                                                                         value of aAePPO
+                                                                                      k,var  according to the training. This is because
+   The Q-function Q(sk , ak ) evaluates the value of executing
+                                                                         different actions may produce the same performance, i.e.,
+action ak at state sk , i.e., it represents the expectation of
+                                                                         reward, which may limit the expansion of experiences. In
+the reward from sk to sT after selecting the action ak . The
+                                                                         this case, the aAePPO
+                                                                                            k,var should be adjusted according to the
+formulation of the Q is shown below.
+                                                                         performance of the reward.
+              Q (s, a) = Eπ [Uk |Sk = s, Ak = a]                  (23)
+
+
+   Then, the Q(sk , ak ) is calculated by the following equation
+in the PPO algorithm.
+                                   T
+                                   X
+     Q(sk , ak ) = r(sk , ak ) +         γ T −i r(sk−i , ak−i )   (24)
+                                   i=1
+
+                                                                         Fig. 3. (a) The sampling of reward; (b) The changes of parameter with respect
+      V. A DAPTIVE E XPLORATION P ROXIMAL P OLICY                        to iterations.
+                      O PTIMIZATION                                         In PPO, the actions are sampled from N (ak,mean , aAePPO
+                                                                                                                                   k,var )
+   The actor of PPO will generate ak,mean and ak,var , based on          and the reward is determined by both the action and state, i.e.,
+the state sk . As discussed in the above section, the action             rk = r(sk , ak ). Then, considering the Bayes’ theorem, since
+ak is sampled from the distribution N (ak,mean , ak,var ). The           rk is one-to-one corresponds to (sk , ak ) pair, when the sk is
+value of ak,var determines the exploration of PPO. With the              fixed, rk should subject to a Normal distribution N (rkmean , rkvar )
+same ak,mean , a larger ak,var represents a wider distribution,          as well, and rkmean and rkvar represent the mean and variance of
+which brings higher degree of exploration and more diverse               the distribution, respectively. As shown in Fig. 3(a), the two
+experiences. On the contrary, the smaller ak,var cannot provide          parameters could be estimated by the following equations.
+a richer experience because the action distribution is more
+                                                                                                           PNa
+concentrated, and the probability of ak deviating from ak,mean                                 rkmean = N1a j=1   r(sk , aik )                  (25)
+is lower. Under this situation, the PPO trains its actor and                                            Na
+                                                                                         rkvar = N1a j=1   (r(sk , aik ) − rkmean )
+                                                                                                      P
+critic according to its previously generated experience, which                                                                                  (26)
+is termed as the process of exploitation.                                                    aik ∈ (a1k , a2k , ..., aik , ..., aN
+                                                                                                                                 k )
+                                                                                                                                  a
+                                                                                                                                                (27)
+                                                                                                                                          7
+
+
+
+                                                                          data, which is obtained by the data transformer and performs
+                                                                          its internal calculation according to the Eqs. (10)∼(15). After
+                                                                          that, the output of LSTM is the predicted mean value Êk+1
+                                                                          of EVCS charging power. Then, the cell state of LSTM is
+                                                                          extracted to fulfill the experience of AePPO, which serves as
+                                                                          the state sk of AePPO. The lower side of Fig. 4 shows the
+                                                                          process of AePPO training iteration. The square with a yellow
+                                                                          background in this figure represents the update mechanism
+                                                                          of actor and critic according to the Eqs. (19)∼(24). Besides,
+                                                                          the area with a violet background represents the procedure of
+                                                                          adaptive exploration. Then, the PSO is applied to minimize
+                                                                          −fkexp and obtains aAePPOk,var , which represents the adaptive
+                                                                          exploration of AePPO. Afterwards, the variation of predicted
+                                                                          distribution δk+1 is sampled from N (ak,mean , aAePPO
+                                                                                                                             k,var ) where
+                                                                          ak,mean is determined by the actor of AePPO. Finally, based on
+                                                                          Eqs. (1)∼(4), the probabilistic prediction distribution of EVCS
+                                                                          charging power is represented by Fek+1 = N (Êk+1 , δk+1 ).
+                                                                          The pseudocode of LSTM-AePPO is provided in the Appendix
+                                                                          B.
+
+
+                                                                                                VI. C ASE S TUDY
+Fig. 4. The interconnection between LSTM and AePPO.
+                                                                          A. Data Description and Experiential Initialization
+where (a1k , a2k , ..., aik , ..., aN
+                                    k ) indicates the Na actions which
+                                      a
+
+
+are sampled from N (ak,mean , aAePPO                                         In this part, we conduct a case study to verify the effec-
+                                         k,var ).
+   Note that rkvar represents the exploration of the PPO and it is        tiveness of our proposed algorithm, i.e., LSTM-AePPO. The
+influenced by aAePPO                var                          AePPO    training data of the algorithm is collected from ACN dataset
+                    k,var . If rk is enlarged by changing ak,var ,
+it indicates the diversity of experiences is enriched, i.e., the          [26], which is an open dataset for EVCS charging researches.
+exploration ability of PPO is enhanced. Besides, since rkmean             The charging sessions in ACN dataset are recorded from
+evaluates the performance of PPO, the higher rkmean means                 two EVCSs, one at Caltech, Pasadena, including 54 chargers
+improved convergence as well. In this case, the focus on                  and the other located in Jet Propulsion Laboratory (JPL),
+exploration and exploitation should be changed during the                 Lacanada, USA, containing 50 chargers. In our experiments,
+training. This process could be represented by the following              the charging session from 1st June 2018 to 1st June 2020 are
+equation.                                                                 applied to train the LSTM-AePPO, in which 25916 and 22128
+                                                                          charging sessions are included in the case of Caltech and JPL,
+                       fkexp = bk,1 rkmean + bk,2 rkvar            (28)
+                                                                          respectively.
+where fkexp represents
+               p          the degree of exploration. bk,1 < 1 and            In order to demonstrate the effectiveness of LSTM-AePPO,
+bk,2 = 1 − 1 − (bk,1 − 1)2 denote two parameters which                    numerous algorithms, i.e., support vector quantile regression
+represent the focus on rkmean and rkvar , respectively. As shown          (SVQR) [27], linear quantile regression (QR) [28], and gradi-
+in Fig. 3(b), the values of these parameters vary according               ent boosting quantile regression (GBQR) [29] are introduced
+to the training iteration k. In the early stage of the training,          for comparisons. Considering the seasonal variations of charg-
+bk,2 is larger than bk,1 , which means fkexp is highly influenced         ing behavior, the performance and metric comparisons are
+by rkvar . Then, bk,1 is increased according to the training, and         conducted on the four seasons, respectively. Moreover, for
+thus, rkvar gradually decreases. When bk,1 > bk,2 , the value             further verifying the outperformance of our proposed AePPO,
+of fkexp is more influenced by rkvar , which means the larger             the traditional PPO is introduced to generate the δk+1 from
+fkexp causes higher rkvar and thus strengthen the exploration.            the cell state for comparisons, which is termed as LSTM-PPO.
+On the other hand, when bk,1 ≤ bk,2 , the raise of fkexp leads               Then, CRPS, Winkler [23], and Pinball [30] are introduced
+to the increase of rkmean , the focus of fkexp has changed from           as evaluation metrics. The three metrics focus on the accuracy,
+raising the exploration to increase the average performance of            variation, and reliability of the forecast distribution, respec-
+PPO, i.e., enhancing the exploitation. In this case, fkexp should         tively. Their details are presented in Appendix C.
+be maximized by adjusting the aAePPO k,var during the training of            In this paper, the features of former Nh hours
+AePPO, i.e., −fkexp should be minimized. In this paper, it                [xi−1 , ..., xi−Nh ] are used in the probabilistic forecasting of
+is solved by the particle swarm optimization (PSO), a well-               EVCS charging power at hour i. The value of Nh is set as
+known optimization algorithm [25].                                        12, and other hyperparameters of LSTM-AePPO are given in
+   In conclusion, after the separate training, the interconnection        Table I. Note that the experiments are conducted on a computer
+between LSTM and proposed AePPO is described as follows.                  with 8GB RAM, Intel i5-8265U CPU, and implemented in
+As illustrated in the upper side of Fig. 4, LSTM takes the input          Python.
+                                                                                                                                         8
+
+
+
+
+Fig. 5. The probabilistic forecasting of Caltech, obtained by the proposed LSTM-AePPO framework.
+
+
+
+
+Fig. 6. The probabilistic forecasting of JPL obtained by the proposed LSTM-AePPO framework.
+
+                           TABLE I                                         B. The Performance of Probabilistic Forecasting Obtained by
+      T HE HYPERPARAMETERS OF THE PROPOSED LSTM-A E PPO.                   LSTM-AePPO
+           Symbol                   Description                 Value
+           ηπ ,ηQ       The learning rate of actor and critic   0.0001
+            ηlstm           The learning rate of LSTM           0.001
+                                                                              The probabilistic forecast of EVCS charging power obtained
+                           The clip value of actor loss          0.1      by LSTM-AePPO are shown in Fig. 5 and Fig. 6, which
+              γ                 The discount factor              0.99
+             Ne       The maximum training number of AePPO      10000      illustrate the results on Caltech and JPL cases among 3
+            Npso              The population of PSO               20       test days (72 hours). The subfigures (a), (b), (c) and (d)
+            Nvar          The maximum iteration of PSO           100
+            e1 , e2         The learning factor of PSO             2       represent the forecast of Spring, Summer, Autumn, and Winter,
+              ω             The inertia weight of PSO             0.7
+                                                                           respectively. Specifically, p% prediction interval (PI) is used
+                                                                           to denote the interval between the lower and upper quantiles
+                                                                           at probability p, and the darker color denotes the PI with a
+                                                                           smaller p. Consequently, the 30% PI is shown with the darkest
+                                                                           color while the 90% PI corresponds to the lightest. Note that
+                                                                                                                                                        9
+
+
+
+                                                                  TABLE II
+                                       T HE SEASONAL METRIC COMPARISON OF TWO SITES UNDER DIFFERENT PI.
+
+                                                               Winkler                                               Pinball
+                                         QR      QRSVM     GBQR      LSTM-PPO     LSTM-AePPO    QR      QRSVM    GBQR     LSTM-PPO      LSTM-AePPO
+                                  30   144.565   113.104   116.499       54.882     30.099     18.922   17.335   17.715        15.412     15.158
+                         Spring   60    85.686    75.070    73.747       45.429     21.036     18.023   16.762   17.095        18.512     13.311
+                                  90    40.323    39.088    38.607       34.876     23.966     16.656   15.783   15.940        23.966     14.057
+                                  30   203.099   160.325   191.611       65.351     26.914     26.366   21.962   24.434        24.424     23.475
+                         Summer   60    99.963    93.854   102.781       40.923     16.665     24.387   20.960   22.590        23.475     15.835
+                                  90    44.193    45.280    45.503       27.592     13.074     21.359   18.935   20.003        21.815     18.664
+               Caltech            30   131.399   83.484    93.647        37.247     67.858     18.495   16.616   18.910        22.154     14.480
+                         Autumn   60    76.467   42.663    47.674        22.865     35.791     17.788   16.595   18.434        15.039     14.683
+                                  90    34.970   28.657    28.326        18.342     21.510     16.446   15.818   16.988        19.850     14.870
+                                  30   131.210   137.102   124.088       55.526     19.342     19.777   18.939   18.630        13.498     13.328
+                         Winter   60    76.665    87.910    77.862       45.158     15.463     18.984   18.101   17.884        17.004     14.124
+                                  90    28.660    30.142    30.627       21.798     14.666     17.271   16.590   16.401        24.813     14.378
+                                  30   367.828   292.015   278.605       71.544     27.800     36.793   30.789   32.484        23.128     18.072
+                         Spring   60   171.225   157.093   135.559       26.264     19.512     34.360   29.845   30.738        31.896     20.312
+                                  90    54.291    49.069    49.749       21.784     18.296     30.001   26.917   27.372        46.840     20.760
+                                  30   210.133   237.387   208.853       37.048     24.952     32.200   26.701   27.833        25.464     25.464
+                         Summer   60   103.983   112.102   100.350       27.096     21.368     31.269   27.156   27.538        31.480     22.680
+                                  90    52.745    49.958    50.535       24.824     19.608     27.807   25.061   25.105        37.528     22.584
+                JPL               30   157.871   123.457   94.360        29.240     23.064     21.857   21.287   21.325        22.712     21.016
+                         Autumn   60    54.617    57.052   52.259        21.976     19.416     23.676   23.167   23.110        25.400     21.464
+                                  90    47.000    47.033   47.040        18.232     18.584     22.834   22.420   22.123        28.856     21.656
+                                  30   524.566   569.323   505.956       38.328     32.440     45.037   43.167   40.867        22.680     22.136
+                         Winter   60   258.636   314.319   265.607       23.416     23.256     41.205   39.586   37.381        24.920     24.888
+                                  90    51.263    76.256    73.966       19.032     18.776     34.898   33.815   32.077        31.512     29.400
+
+
+
+
+the real charging power is represented by the red line in these
+figures.
+   One of the biggest challenges of the charging power fore-
+casting is to predict the peak, which varies according to the
+seasons. For instance, in the Spring and Autumn case of
+Caltech, it could be learned that the peaks emerge in around
+the 18th and 42nd hours, as shown in Figs. 5(a) and (c).
+However, as shown in Figs. 5(b) and (d), the peaks during the
+Summer and Winter appear 3 times, which is more frequent.
+Besides, as shown in Fig. 6, the peaks are more irregular in
+the JPL case, which appear 2 times in the Spring and Autumn
+cases, 1 time in the Summer case and 3 times in the Winter
+case. Although the peak appears irregularly, LSTM-AePPO
+achieves a good result. The fluctuation of the probabilistic
+                                                                                    Fig. 7. The comparisons of CRPS in the case of Clatech among the five
+forecast distribution can capture the EVCS charging power.                          mentioned algorithms.
+As shown in Figs. 5 and 6, most of the values in the red
+lines are covered by the 90% PI, which means that the
+probabilistic forecast distribution could represent the variation
+of real charging power.                                                             LSTM-AePPO always performs the best at 60% PI. More-
+                                                                                    over, when focusing on the Winter case of Caltech, the QR,
+                                                                                    QRSVM, GBQR and LSTM-PPO also perform worse than
+C. Metrics Comparison Among Different Algorithms                                    LSTM-AePPO since their Winkle and Pinball values are larger.
+   To verify the effectiveness of LSTM-AePPO, the Winkler,                          Generally, the forecast distribution obtained by LSTM-AePPO
+Pinball and CRPS are introduced as metrics for comparison.                          have a better variation and reliability at Caltech case. In
+Since the values of Winkler and Pinball are related to PI, the                      addition, the effectiveness is also verified comprehensively in
+effectiveness of our proposed algorithm is demonstrated by                          the JPL case. As shown in the Table II, the Winkler and Pinball
+comparing with other algorithms under 30%, 60% and 90%                              numbers obtained by LSTM-AePPO in the JPL case are bold,
+PIs, as shown in Table II.                                                          which means QR, QRSVM, GBQR and LSTM-PPO are all
+   In this table, the best metric value of each case is marked                      surpassed from both the variation and reliability of the forecast
+in bold. It could be seen that the LSTM-AePPO outperforms                           distribution.
+other algorithms on Winkler and Pinball in most cases. For                             Note that the LSTM-AePPO does not perform the best in the
+example, in the Spring case of Caltech, the Winkler and                             following two cases, i.e., the Winkler of Caltech Autumn case
+Pinball values of LSTM-AePPO at 30%, 60% and 90% PIs                                at 90% PI (21.510 for LSTM-AePPO but 18.342 for LSTM-
+are (30.099, 15.158), (21.036, 13.311) and (23.966, 14.057),                        PPO) and the Pinball of Caltech Summer case at 30% PI
+which are lower than the Winkler values of other algorithms.                        (23.475 for LSTM-AePPO but 21.962 for QRSVM). The cause
+Besides, in the Summer and Autumn cases of Caltech, the                             of this phenomenon may be the correlation between Winkler
+                                                                                                                                                  10
+
+
+
+                                                                              after around the 8000th and the 5000th iteration in the case
+                                                                              of Caltech and JPL, respectively.
+
+
+
+
+Fig. 8. The comparisons of CRPS in the case of JPL among the five mentioned
+algorithms.                                                                   Fig. 9. The comparison between the reward of PPO and AePPO during the
+                                                                              training in the case of Caltech.
+
+and Pinball to the PI. Therefore, as a metric that is independent
+of PI, the CRPS is introduced to evaluate the accuracy of
+the whole forecast probabilistic distribution, and the lower
+CRPS value indicates a more accurate forecast probabilistic
+distribution. The comparisons of CRPS under Caltech and JPL
+cases are illustrated in Fig. 7 and Fig. 8. It can be seen from
+the two figures that our proposed LSTM-AePPO achieves the
+lowest CRPS values in all the cases, which demonstrates the
+accuracy of LSTM-AePPO could surpass other comparison
+algorithms. Based on the analysis of the Winkler, Pinball and
+CRPS values under different cases, it could be concluded that
+the LSTM-AePPO is more effective than QR, GBQR, QRSVM
+and LSTM-PPO.
+
+                                                                              Fig. 10. The comparison between the reward of PPO and AePPO during the
+                                                                              training in the case of JPL.
+D. The Effectiveness of AePPO
+                                                                                 Therefore, it can be seen that the adaptive exploration mech-
+   To illustrate the effectiveness of the proposed adaptive
+                                                                              anism strengthen the accumulation of AePPO experiences in
+exploration mechanism in LSTM-AePPO, the reward curves
+                                                                              the early stage. Then, the AePPO would make full use of these
+of PPO and AePPO during the 10000 training iterations are
+                                                                              experiences during the training and finally achieves a higher
+compared in the Caltech and JPL cases, as shown in Fig. 9
+                                                                              reward than PPO. In addition, the fluctuation of reward curves
+and Fig. 10. In Fig. 9, the reward of PPO increases during
+                                                                              obtained by LSTM-AePPO are lower in the two cases. This
+the first 3000 iterations and stays steady. Similarly, as shown
+                                                                              illustrates that the proposed AePPO provides a more stable
+in Fig. 10, the reward of PPO continuously raise from -20 to
+                                                                              and superior performance than the original PPO.
+-7.5 in the first 1000 iterations then maintains at a relatively
+stable level.
+   Because of applying the adaptive exploration mechanism,                                           VII. C ONCLUSTION
+the AePPO would focus on exploration in the early stage,                          This paper has proposed a reinforcement learning assisted
+which enriches the experience while causing the backwardness                  deep learning probabilistic forecast framework for the charging
+of the reward value. For instance, in the case of Caltech,                    power of EVCS, which contains a data transformer method
+the reward of PPO increases from around -30 to -23 during                     and a probabilistic forecast algorithm, termed as LSTM-
+the early 3000 iterations, while the reward value of AePPO                    AePPO. After being preprocessed by the data transformer, the
+raises from -29 to -27. The same situation also appears in                    charging session data is used to train the LSTM, which aims
+the case of JPL. The reward of PPO goes up from -25 to                        to obtain the mean value of the forecast distribution. Then, the
+-7 in the early training, while the corresponding reward of                   variation of the LSTM cell state is modeled as a MDP and a
+AePPO hardly increases. However, the exploration of PPO                       reinforcement learning algorithm, AePPO, is applied to solve
+would decrease due to the premature convergence of its actor,                 it. In this way, the variance of the forecast distribution can be
+thus the diversity of its experience is not plentiful enough,                 provided by the AePPO. In addition, to balance the exploration
+which may cause the PPO falling into the local optima. As                     and the exploitation, an adaptive exploration mechanism is
+a result, the rewards of AePPO increase and surpass PPO                       further proposed to enrich the diversity of the experiences
+                                                                                                                                                               11
+
+
+
+thus preventing the premature convergence of AePPO. Finally,                      [14] G. Guo, W. Yuan, Y. Lv, W. Liu, and J. Liu, “Traffic forecasting via
+the case studies are conducted based on the charging session                           dilated temporal convolution with peak-sensitive loss,” IEEE Intelligent
+                                                                                       Transportation Systems Magazine, in press.
+data of Caltech and JPL. The experiments show the superior                        [15] M. Xue, L. Wu, Q. P. Zhang, J. X. Lu, X. Mao, and Y. Pan, “Research
+performance of the proposed LSTM-AePPO by comparing                                    on load forecasting of charging station based on XGBoost and LSTM
+with QR, QRSVM, GBQR and LSTM-PPO on the CRPS,                                         model,” in Journal of Physics: Conference Series, vol. 1757, no. 1, 2021,
+                                                                                       p. 012145.
+Winkler and Pinball metrics. Moreover, the comparison be-                         [16] Y. Kim and S. Kim, “Forecasting charging demand of electric vehicles
+tween the reward curves of PPO and AePPO indicates that the                            using time-series models,” Energies, vol. 14, no. 5, p. 1487, 2021.
+adaptive exploration mechanism is more effective in balancing                     [17] L. Buzna, P. De Falco, G. Ferruzzi, S. Khormali, D. Proto, N. Refa,
+                                                                                       M. Straka, and G. van der Poel, “An ensemble methodology for
+the exploration and the exploitation of reinforcement learning.                        hierarchical probabilistic electric vehicle load forecasting at regular
+   Two challenges remain in our work, which are worth                                  charging stations,” Applied Energy, vol. 283, p. 116337, 2021.
+investigating in future work. First, the better point forecasting                 [18] X. Zhang, K. W. Chan, H. Li, H. Wang, J. Qiu, and G. Wang, “Deep-
+                                                                                       learning-based probabilistic forecasting of electric vehicle charging load
+method should be investigated to achieve a higher prediction                           with a novel queuing model,” IEEE Transactions on Cybernetics, vol. 51,
+accuracy. Meanwhile, the method is also required to remain                             no. 6, pp. 3157–3170, 2021.
+the parameters that contain the uncertainties of model and                        [19] L. Zhu and N. Laptev, “Deep and confident prediction for time series at
+                                                                                       uber,” 2017 IEEE International Conference on Data Mining Workshops,
+data simultaneously, such as the cell state in LSTM. The                               pp. 103–110, 2017.
+other is accelerating the training process of reinforcement                       [20] Y. Li, G. Hao, Y. Liu, Y. Yu, Z. Ni, and Y. Zhao, “Many-objective
+learning algorithm, i.e., AePPO, while keeping the diversity                           distribution network reconfiguration via deep reinforcement learning
+                                                                                       assisted optimization algorithm,” IEEE Transactions on Power Delivery,
+of exploration and the convergence performance.                                        in press.
+                                                                                  [21] C. Wan, Z. Xu, P. Pinson, Z. Y. Dong, and K. P. Wong, “Probabilistic
+                                                                                       forecasting of wind power generation using extreme learning machine,”
+                              R EFERENCES                                              IEEE Transactions on Power Systems, vol. 29, no. 3, pp. 1033–1044,
+                                                                                       2014.
+ [1] Z. Wei, Y. Li, and L. Cai, “Electric vehicle charging scheme for a           [22] A. Khosravi, S. Nahavandi, D. Creighton, and A. F. Atiya, “Compre-
+     park-and-charge system considering battery degradation costs,” IEEE               hensive review of neural network-based prediction intervals and new
+     Transactions on Intelligent Vehicles, vol. 3, no. 3, pp. 361–373, 2018.           advances,” IEEE Transactions on Neural Networks, vol. 22, no. 9, pp.
+ [2] L. Liu, F. Kong, X. Liu, Y. Peng, and Q. Wang, “A review on electric              1341–1356, 2011.
+     vehicles interacting with renewable energy in smart grid,” Renewable         [23] M. Sun, T. Zhang, Y. Wang, G. Strbac, and C. Kang, “Using bayesian
+     and Sustainable Energy Reviews, vol. 51, pp. 648–661, 2015.                       deep learning to capture uncertainty for residential net load forecasting,”
+ [3] Y. Shi, H. D. Tuan, A. V. Savkin, T. Q. Duong, and H. V. Poor, “Model             IEEE Transactions on Power Systems, vol. 35, no. 1, pp. 188–201, 2020.
+     predictive control for smart grids with multiple electric-vehicle charging   [24] Y. Chu and C. F. Coimbra, “Short-term probabilistic forecasts for direct
+     stations,” IEEE Transactions on Smart Grid, vol. 10, no. 2, pp. 2127–             normal irradiance,” Renewable Energy, vol. 101, pp. 526–536, 2017.
+     2136, 2019.                                                                  [25] S. Kachroudi, M. Grossard, and N. Abroug, “Predictive driving guidance
+ [4] K. Chaudhari, N. K. Kandasamy, A. Krishnan, A. Ukil, and H. B. Gooi,              of full electric vehicles using particle swarm optimization,” IEEE
+     “Agent-based aggregated behavior modeling for electric vehicle charging           Transactions on Vehicular Technology, vol. 61, no. 9, pp. 3909–3919,
+     load,” IEEE Transactions on Industrial Informatics, vol. 15, no. 2, pp.           2012.
+     856–868, 2019.                                                               [26] Z. J. Lee, T. Li, and S. H. Low, “ACN-data: Analysis and applications of
+ [5] S. Cheng, Z. Wei, D. Shang, Z. Zhao, and H. Chen, “Charging load                  an open ev charging dataset,” in Proceedings of the Tenth International
+     prediction and distribution network reliability evaluation considering            Conference on Future Energy Systems, 2019, pp. 139–149.
+     electric vehicles’ spatial-temporal transfer randomness,” IEEE Access,       [27] Y. He, R. Liu, H. Li, S. Wang, and X. Lu, “Short-term power load
+     vol. 8, pp. 124 084–124 096, 2020.                                                probability density forecasting method using kernel-based support vector
+ [6] L. Chen, F. Yang, Q. Xing, S. Wu, R. Wang, and J. Chen, “Spatial-                 quantile regression and copula theory,” Applied Energy, vol. 185, pp.
+     temporal distribution prediction of charging load for electric vehicles           254–266, 2017.
+     based on dynamic traffic information,” in 2020 IEEE 4th Conference on        [28] T. Hong, P. Wang, and H. L. Willis, “A naı̈ve multiple linear regression
+     Energy Internet and Energy System Integration, 2020, pp. 1269–1274.               benchmark for short term load forecasting,” in 2011 IEEE Power and
+ [7] Y. Zheng, Z. Shao, Y. Zhang, and L. Jian, “A systematic methodology               Energy Society General Meeting, 2011, pp. 1–6.
+     for mid-and-long term electric vehicle charging load forecasting: The        [29] Y. Wang, N. Zhang, Y. Tan, T. Hong, D. S. Kirschen, and C. Kang,
+     case study of Shenzhen, China,” Sustainable Cities and Society, vol. 56,          “Combining probabilistic load forecasts,” IEEE Transactions on Smart
+     p. 102084, 2020.                                                                  Grid, vol. 10, no. 4, pp. 3664–3674, 2019.
+ [8] H. J. Feng, L. C. Xi, Y. Z. Jun, Y. X. Ling, and H. Jun, “Review             [30] Y. Wang, D. Gan, M. Sun, N. Zhang, Z. Lu, and C. Kang, “Probabilistic
+     of electric vehicle charging demand forecasting based on multi-source             individual load forecasting using pinball loss guided LSTM,” Applied
+     data,” in 2020 IEEE Sustainable Power and Energy Conference, 2020,                Energy, vol. 235, pp. 10–20, 2019.
+     pp. 139–146.                                                                 [31] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov,
+ [9] H. M. Louie, “Time-series modeling of aggregated electric vehicle                 “Proximal policy optimization algorithms,” arXiv:1707.06347 [cs], in
+     charging station load,” Electric Power Components and Systems, vol. 45,           press.
+     no. 14, pp. 1498–1511, 2017.
+[10] X. Zhang, “Short-term load forecasting for electric bus charging stations
+     based on fuzzy clustering and least squares support vector machine                                  A PPENDIX A
+     optimized by wolf pack algorithm,” Energies, vol. 11, no. 6, p. 1449,                T HE C ALCULATION OF C ONTINUOUS R ANKED
+     2018.
+[11] A. Almaghrebi, F. Aljuheshi, M. Rafaie, K. James, and M. Alahmad,
+                                                                                                     P ROBABILITY S CORE
+     “Data-driven charging demand prediction at public charging stations us-        Normally, the CRPS is defined as follows.
+     ing supervised machine learning regression methods,” Energies, vol. 13,
+     no. 16, p. 4231, 2020.                                                                       Z y             Z ∞
+                                                                                                            2
+[12] J. Zhu, Z. Yang, M. Mourshed, Y. Guo, Y. Zhou, Y. Chang, Y. Wei,               CRPS(F , y) =
+                                                                                         e            F (x) dx +
+                                                                                                      e                (1 − Fe(x))2 dx (A.1)
+     and S. Feng, “Electric vehicle charging load forecasting: A comparative                              −∞                    y
+     study of deep learning approaches,” Energies, vol. 12, no. 14, p. 2692,
+     2019.                                                                        where Fe(·) is the predicted distribution obtained by the prob-
+[13] Z. Li, Y. Li, Y. Liu, P. Wang, R. Lu, and H. B. Gooi, “Deep learning
+     based densely connected network for load forecasting,” IEEE Transac-         abilistic forecasting model and y is the real value. Since the
+     tions on Power Systems, vol. 36, no. 4, pp. 2829–2840, 2021.                 noise of our studied probabilistic forecast problem is assumed
+                                                                                                                                             12
+
+
+
+to follow the Gaussian distribution, as shown in Eqs. (1)∼(4),                           p (xi , bj,1 )
+                                                                         6: function FITNESS
+Eq. (A.1) can be derived as follows.                                     7:     bj,2 = 1 − 1 − (bj,1 − 1)2
+                                                                     8:     Sample Na action from N (ak,mean , xi )
+                      y−µ             y−µ                                                      PNa
+     CRPS(F , y) = δ(
+            e                  2Fe           −1 +                        9:     rkmean ← N1a j=1      r(sk , aik )
+                        δ               δ                                                  1    Na
+                                                                                rk ← Na j=1 (r(sk , aik ) − rkmean )
+                                                                                  var
+                                                                                             P
+                                                       (A.2)          10:
+                                      y−µ        1
+                                2fe          −√ )                       11:     return bj,1 rkmean + bj,2 rkvar
+                                        δ         π                     12: end function
+where µ and δ are the mean and variance of the predicted                13: for epoch e = 1 to Ne do
+distribution. The functions Fe(·) and fe(·) are formulated as           14:     Collect the experience tuple hsk , ak , rk , sk+1 i:
+follows.                                                                15:     for k = 1 to Ntrain do
+                            1
+                                    2
+                                                                       16:           sk ← ck
+                                   −x
+                  fe(x) = √ e 2                         (A.3)           17:           ak ← π(sk )
+                           Z2π  x                                       18:           rk is obtained by Eq. (A.2)
+                    Fe(x) =         fe(t)dt                    (A.4)    19:           sk+1 ← ck+1
+                               −∞                                       20:     end for
+                                                                        21:     Compute the discounted rewards:
+                                                                                                              Pt
+                      A PPENDIX B                                       22:     Q(sk , ak ) ← r(sk , ak ) + i=1 γ t−i r(sk−i , ak−i )
+     T HE P SEUDOCODE OF LSTM-A E PPO T RAINING                         23:     Estimate the advantage:
+Algorithm 1 The training of LSTM.                                       24:     Aπs,a
+                                                                                    k
+                                                                                       ← Q(sk , ak ) − V πk (sk )
+                                                                        25:     Update the policy by minimizing the loss function:
+ 1: Input The set of input features {Xn }N
+                                         n=1 and the target                                                               πk (a|s)
+      charging power set {Yn }N                                         26:     LCLIP = min( ππk−1 k (a|s)    πk
+                                                                                                      (a|s) As,a , clip( πk−1 (a|s) , 1 − , 1 +
+                              n=1 .                                             πk
+ 2: Output A well trained LSTM model A(Xn , Yn , cn )
+                                                                            )As,a )
+ 3: Initialize ηlstm (The learning rate of LSTM).
+                                                                        27:     The details are given in the Appendix D.
+ 4: Initialize Ntrain , Nvalid , Ne (Number of samples in the
+                                                                        28:     Update the policy by minimizing the loss function:
+      training set, validation set and the number of training           29:     LQ = Es,a∼πk [(γV πk (sk+1 ) + r(sk , ak ) − V πk (sk ))2 ]
+      epochs)                                                           30:     Using PSO to obtain the adaptive exploration.
+                                                                        31: end for
+                                                                        32: return The well trained actor π
+ 5: for epoch e = 1 to Ne do
+ 6:     Initialize c1
+ 7:     Receive Xn and Yn                                                                    A PPENDIX C
+ 8:     Execute the forward propagation of LSTM:                                 C OMPARATIVE M ETRICS IN E XPERIMENTS
+ 9:     fn+1 ← σ(Wfn · [Yn , Xn ] + bnf )
+                                                                           To compare performances of the algorithms mentioned in
+10:     in+1 ← σ(Win · [Yn , Xn ] + bni )
+                                                                        this paper, the competitive metrics are needed to be used. The
+11:     c̃n+1 ← tanh(Wcn · [Yn , Xn ] + bnc )
+                                                                        comprehensive evaluation of probabilistic prediction should
+12:     cn+1 ← fn+1 ⊗ cn + in+1 ⊗ c̃n+1
+                                                                        consider its accuracy, variation, and reliability. Here, we adopt
+13:     on+1 ← σ(Won [yn , Xt ] + bno )
+                                                                        three metrics, i.e., CRPS, Winkler [23] and Pinball [30] to
+14:     ŷn+1 ← on+1 × tanh(cn+1 )
+                                                                        evaluate the three aspects, respectively. The definition of CRPS
+15:     Calculate the loss of LSTM:
+                                                                        is given in Eq. (A.2). As a famous metric, the Winkler is used
+16:     Receive Yn+1
+                                                                        to evaluate the variation of probabilistic distribution, and it is
+17:     L ← MSE(ŷn+1 , Yn+1 )
+                                                                        expressed as follows.
+18:     Calculate the derivatives of the learnable pa-
+    rameters of LSTM dL/dθn , where θn represents
+                                                                                      
+                                                                                       2(Lp (yˆt ) − yt )/α + δ,
+                                                                                                                     yt < Lp (yˆt )
+    Wfn , Win , Wcn , Won , bnf , bni , bnc and bno . The details are
+                                                                          Winkler = 2(yt − Up (yˆt ))/α + δ,          yt > Up (yˆt ) (C.1)
+    given in the Appendix D.                                                          
+                                                                                        δ,                            otherwise
+                                                                                      
+19:     Update the parameters of the LSTM via Adam.
+20: end for
+                                                                        where yˆt and yt denote the predicted distribution and the
+21: return A(Xn , Yn , cn ).
+                                                                        real charging power at time t. Lp (yˆt ) and Up (yˆt ) indicate
+                                                                        the lower and upper quantiles at probability p. α and δ are
+Algorithm 2 The training of AePPO.
+                                                                        two parameters of this metric, which are set as 0.1 and 1,
+ 1: Input The input features set {Xn }N
+                                      n=1 and target charging           respectively. Normally, the lower value of Winkler means the
+    power set {Yn }N   n=1 . The cell state produced by LSTM            better variation.
+    {cn }Nn=1 .                                                            In addition, considering the reliability of the predicted
+ 2: Output A well trained actor π.                                      probabilistic distribution, Pinball is introduced as a metric,
+ 3: Initialize ηπ , ηQ , , γ, Ntrain , Nvalid , Ne , Npso , Nvar ,     and its mathematical formulation is expressed as follows.
+    e1 , e2 .                                                                             (
+ 4: Initialize The actor and critic network π, V .                                          (yt − ŷp,t )p,         ŷp,t < yt
+                j    j        j                                              Pinballp =                                           (C.2)
+ 5: Initialize vi , xi and fi of each particle i, i ∈ [1, Npso ]                            (ŷp,t − yt )(1 − p),   ŷp,t ≥ yt
+                                                                                                                                                 13
+
+
+
+                                                                                              ∂Lt       ∂Lt+1 ∂y t          ∂ct+1 ∂ct ∂c̃t
+                                                                                                                             
+where p stands for the probability of ŷp,t > yt and ŷp,t                         dL
+                                                                                      =             +                    +
+indicates the predicted  value at time t. The average Pinball                     dWc         ∂y t       ∂y t      ∂ct       ∂ct    ∂c̃t ∂Wc
+                 P
+value Pinball = p Pinballp of the probabilistic prediction is                                                                             (D.9)
+                                                                                                            ∂Lt+1 ∂y t ∂ot
+                                                                                                 t                 
+                                                                                         dL        ∂L
+used to represent its performance. Note that the lower Pinball                               =           +                               (D.10)
+stands for the better performance.                                                      dWo        ∂y t       ∂y t     ∂ot ∂Wo
+
+                                                                                                        ∂Lt+1 ∂y t          ∂ct+1 ∂ct ∂ft
+                                                                                          t                                  
+                                                                                   dL         ∂L
+                      A PPENDIX D                                                      =            +                    +
+                                                                                   dbf        ∂y t       ∂y t      ∂ct       ∂ct    ∂ft ∂bf
+    T HE D ERIVATIVES OF L EARNABLE PARAMETERS IN                                                                                        (D.11)
+                                                                                                        ∂Lt+1 ∂y t          ∂ct+1 ∂ct ∂it
+                                                                                          t                                  
+                     LSTM-A E PPO                                                  dL         ∂L
+                                                                                       =            +                    +
+   In this section, we provide the derivatives of the learnable                    dbi        ∂y t       ∂y t      ∂ct       ∂ct    ∂it ∂bi
+                                                                                                                                         (D.12)
+parameters Wf , Wi , Wc , Wo , bf , bi , bc , bo and θ of LSTM-                    dL
+                                                                                          t
+                                                                                              ∂L        ∂Lt+1 ∂y t
+                                                                                                                      
+                                                                                                                            ∂ct+1 ∂ct ∂c̃t
+                                                                                                                                  
+AePPO. Based on the Eqs. (10)∼(15), the LSTM takes Xt                                  =            +                    +
+                                                                                   dbc        ∂y t       ∂y t      ∂ct       ∂ct    ∂c̃t ∂bc
+as its input and output yt+1 as its forecast. Its loss function is                                                                       (D.13)
+denoted as L. The Wf is taken as an example to describe its                                 dL
+                                                                                                     t
+                                                                                                      ∂L       ∂Lt+1 ∂y t ∂ot
+                                                                                                                       
+derivative1 .                                                                                   =           +                            (D.14)
+                                                                                            dbo        ∂y t       ∂y t    ∂ot ∂bo
+                        ∂Lt+1 ∂y t
+             t                 
+    dL        ∂L
+         =          +                                                           where
+  dWf         ∂y t       ∂y t      ∂Wft                                                                ∂ct
+                                          !                                                                = c̃t it (1 − it )              (D.15)
+               t
+                ∂L        ∂Lt+1 ∂y t
+                                   
+                                                ∂ct+1                                                  ∂it
+         =            +                 t    +
+                ∂y  t      ∂y  t     ∂Wf        ∂Wft                                                        ∂ct
+             t                                                                                                = it                      (D.16)
+                           ∂Lt+1 ∂y t           ∂ct+1    ∂ct                                                ∂c̃t
+                                                    
+                  ∂L
+         =               +                   +
+                   ∂y t       ∂y t    ∂ct        ∂ct    ∂Wft                                            ∂y t
+             t               t+1
+                                     t          t+1
+                                                       t                                                    = tath(ct )                   (D.17)
+                  ∂L       ∂L         ∂y        ∂c      ∂c ∂ft                                          ∂ot
+         =            t
+                         +       t      t
+                                             +     t
+                   ∂y         ∂y      ∂c         ∂c     ∂ft ∂Wf
+                                                                                               ∂it   ∂c̃t   ∂ot
+                                                             (D.1)                                 =      =     = [yt , Xt ]               (D.18)
+                                                                                               ∂Wi   ∂Wc    ∂Wo
+where ∂Lt+1 /∂y t is the derivative of error at t+1 with respect
+                                                                                                ∂ft   ∂it   ∂c̃t   ∂ot
+to y t . In this paper, the loss function L is mean square error,                                   =     =      =     =1                  (D.19)
+which could be formulated by                                                                    ∂bf   ∂bi   ∂bc    ∂bo
+
+                          1 t                                                     Then, the learnable parameters θ of AePPO is provided.
+                          Lt =
+                            (y − ŷ t )2 .          (D.2)                       To simplify the notation, we denote πt (a | s)/πt−1 (a | s) as
+                          2
+                                                                                the probability ratio by r(a|s). Then, the Eq. (20) could be
+  Then, the other derivatives are given in the following                        rewritten as
+explicit formulas.
+                     ∂Lt                                                          LCLIP =
+                           = y t − ŷ t             (D.3)                                                                                   
+                     ∂y t
+                                                                                  Es,a∼πt min(r(a|s)Aπs,a
+                                                                                                       t
+                                                                                                          , clip(r(a|s), 1 − , 1 + )Aπs,a
+                                                                                                                                         t
+                                                                                                                                            )
+                       ∂y t
+                            = ot (1 − tath(ct )2 )                    (D.4)                                                                (D.20)
+                       ∂ct
+                                                                                  The derivative of θ could be derived from the above formula.
+                             ∂ct+1
+                                   = ft+1                             (D.5)         dLCLIP
+                                                                                                        
+                                                                                                          ∂ log πtθ (a|s)
+                                                                                                                                      
+                              ∂ct                                                           = Es,a∼πk                     r(a|s)Aπs,a
+                                                                                                                                   t
+                                                                                                                                        (D.21)
+                                                                                      dθ                       ∂θ
+                         ∂ct
+                             = ct−1 ft (1 − ft )                      (D.6)
+                         ∂ft                                                    where πtθ indicates the actor at iteration t with parameter θ.
+                                                                                Note that the term r(a|s)Aπs,a
+                                                                                                            t
+                                                                                                               in the above formula is clipped
+                            ∂fn                                                 into the range [1 − , 1 + ] [31]. The ∂ log πθ (a|s)/∂θ is
+                                = [yt , Xt ]                          (D.7)
+                            ∂Wf                                                 formulated as follows.
+  Similarly, the derivative of Wi , Wc , Wo , bf , bi , bc and bo                   ∂ log πθ (a|s)
+                                                                                                   =
+could be represented by the following equations.                                           ∂θ 
+                                                                                                                (a − aθmean )2 − (aAePPO )2
+                                                                                                                                           
+   dL
+           t
+                ∂L     ∂Lt+1 ∂y t
+                                    
+                                          ∂ct+1 ∂ct ∂it
+                                                                                         1            θ                           var
+       =             +                 +                                                         (a − amean )
+  dWi           ∂y t     ∂y t    ∂ct       ∂ct         ∂it ∂Wi                      (aAePPO
+                                                                                       var   )2                           aAePPO
+                                                                                                                            var
+                                                             (D.8)                                                                          (D.22)
+
+  1 During the intermediate training of LSTM, the ∂Lt
+                                                                                where aAePPO
+                                                                                        var    is obtained by the adaptive exploration mecha-
+                                                  ∂y t
+                                                           may be equal to
+0 because the loss function has not calculated at time t. In this case, to
+                                                                                nism rather than AePPO during the training, which is different
+ t the gradient
+avoid           disappearance tthat caused by the zero of derivative, we use   with traditional PPO. Besides, aθmean is obtained by AePPO
+  ∂L     ∂Lt+1
+  ∂y t +  ∂y t    instead of ∂L
+                             ∂y t
+                                  .                                             with learnable parameters θ.
+                                                                                                                                                             14
+
+
+
+  With the formulation of these derivative, the learnable                                                 Suhua Lou received her B.E., M.Sc. and Ph.D.
+parameters could be update through the following equation                                                 degrees in electrical engineering from Huazhong
+                                                                                                          University of Science and Technology (HUST),
+with learning rate η.                                                                                     Wuhan, China, in 1996, 2001 and 2005, respec-
+                                                                                                          tively. She is currently working as a Professor in
+                            P t = P t + ∆P t                         (D.23)                               HUST. Her research interests include power system
+                                                                                                          planning,energy economics and renewable energy
+where P t indicates the learnable parameters of LSTM-AePPO                                                generation.
+and the ∆P t is represented by
+                                     ∂L
+                       ∆P t = ∆P t−1 + η                             (D.24)
+                                     ∂P t
+where ∂L/∂P t denotes the derivative of P t .
+                         Yuanzheng Li received the M.S. degree and Ph.D.
+                         degree in Electrical Engineering from Huazhong
+                         University of Science and Technology (HUST),
+                         Wuhan, China, and South China University of Tech-
+                         nology (SCUT), Guangzhou, China, in 2011 and
+                         2015, respectively. Dr Li is currently an Asso-
+                         ciate Professor in HUST. He has published several
+                         peer-reviewed papers in international journals. His
+                         current research interests include electric vehicle,
+                         deep learning, reinforcement learning, smart grid,
+                         optimal power system/microgrid scheduling and de-
+cision making, stochastic optimization considering large-scale integration of
+renewable energy into the power system and multi-objective optimization.
+
+
+
+
+                         Shangyang He received the B.S. degree in Au-
+                         tomation from the Wuhan University of Technol-
+                         ogy in 2020. He is currently working toward the
+                         M.S. degree in Huazhong University of Science and                                Zhigang Zeng (IEEE Fellow) received the Ph.D.
+                         Technology (HUST), Wuhan, China. His research                                    degree in systems analysis and integration from
+                         interests include electric vehicle charging power                                Huazhong University of Science and Technol-
+                         forecast, deep learning, deep reinforcement learning                             ogy,Wuhan, China, in 2003. He is currently a Profes-
+                         and graph neural network.                                                        sor with the School of Automation and the Key Lab-
+                                                                                                          oratory of Image Processing and Intelligent Control
+                                                                                                          of the Education Ministry of China, Huazhong Uni-
+                                                                                                          versity of Science and Technology. He has published
+                                                                                                          more than 100 international journal articles. His cur-
+                                                                                                          rent research interests include theory of functional
+                                                                                                          differential equations and differential equations with
+                                                                                 discontinuous right-hand sides and their applications to dynamics of neural
+                         Yang Li received the Ph.D. degree in electrical         networks, memristive systems, and control systems. Dr. Zeng was an Associate
+                         engineering from North China Electric Power Uni-        Editor of the IEEE TRANSACTIONS ON NEURAL NETWORKS AND
+                         versity, Beijing, China, in 2014. He is an Associate    LEARNING SYSTEMS from 2010 to 2011. He has been an Associate Editor
+                         Professor with the School of Electrical Engineering,    of the IEEE TRANSACTIONS ON CYBERNETICS since 2014 and the IEEE
+                         Northeast Electric Power University, Jilin, China.      TRANSACTIONS ON FUZZY SYSTEMS since 2016, and a member of the
+                         He is currently also a China Scholarship Council-       Editorial Board of Neural Networks since 2012, Cognitive Computation since
+                         funded Postdoc with Argonne National Laboratory,        2010, and Applied Soft Computing since 2013.
+                         Lemont, IL, USA. His research interests include
+                         power system stability and control, integrated energy
+                         systems, renewable energy integration, and smart
+                         grids.
+
+
+
+
+                         Leijiao Ge received the bachelor degree in electrical
+                         engineering and its automation from Beihua Univer-
+                         sity, Jilin, China, in 2006, and the master degree
+                         in electrical engineering from Hebei University of
+                         Technology, Tianjin, China, in 2009, and the Ph.D.
+                         degree in Electrical Engineering from Tianjin Uni-
+                         versity, Tianjin, China, in 2016. He is currently an
+                         associate professor in the School of Electrical and
+                         Information Engineering at Tianjin University. His
+                         main research interests include situational awareness
+                         of smart distribution network, cloud computing and
+big data.
+

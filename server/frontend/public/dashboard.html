@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GridFlow EV Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=four-method-saving-20260604" />
+  </head>
+  <body class="dashboard-page">
+    <div class="dashboard-shell">
+      <aside class="side-nav" aria-label="대시보드 메뉴">
+        <a class="side-brand" href="dashboard.html">
+          <span class="brand-mark">G</span>
+          <strong>GridFlow EV</strong>
+        </a>
+        <nav class="side-menu">
+          <a class="active" href="#overview">대시보드</a>
+          <a href="#map">지도</a>
+          <a href="#stations">충전소 관리</a>
+          <a href="#operation">운영 정책</a>
+          <a href="#tariff">요금 현황</a>
+          <a href="dashboard.html?view=live">홈</a>
+        </nav>
+        <div class="side-help">
+          <strong>운영 알림</strong>
+          <p>충전 수요가 높은 충전소와 전력 공유 흐름을 우선 확인하세요.</p>
+        </div>
+      </aside>
+
+      <div class="layout">
+        <header class="app-topbar">
+          <div class="top-search">
+            <span>⌕</span>
+            <input placeholder="충전소명, 지역, 수요 혼잡도 검색" aria-label="전체 검색" />
+          </div>
+
+          <nav class="app-tabs" aria-label="대시보드 이동">
+            <a class="active" href="#overview">대시보드</a>
+            <a href="#map">지도</a>
+            <a href="#stations">충전소</a>
+            <a href="#operation">운영 정책</a>
+          </nav>
+
+          <div class="app-actions">
+            <span class="live-pill">
+              <span class="status-dot"></span>
+              <span id="iot-status">3개 충전소</span>
+            </span>
+            <button
+              class="settings-button"
+              id="settings-toggle"
+              type="button"
+              aria-label="디자인 설정 열기"
+              aria-expanded="false"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.15 2.15 0 1 1-3.04 3.04l-.04-.04A1.8 1.8 0 0 0 14.74 19a1.8 1.8 0 0 0-1.08 1.65V20.8a2.15 2.15 0 1 1-4.3 0v-.06A1.8 1.8 0 0 0 8.26 19a1.8 1.8 0 0 0-1.98.36l-.04.04a2.15 2.15 0 1 1-3.04-3.04l.04-.04A1.8 1.8 0 0 0 5 14.74a1.8 1.8 0 0 0-1.65-1.08H3.2a2.15 2.15 0 1 1 0-4.3h.06A1.8 1.8 0 0 0 5 8.26a1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.15 2.15 0 1 1 7.64 3.2l.04.04A1.8 1.8 0 0 0 9.26 5a1.8 1.8 0 0 0 1.08-1.65V3.2a2.15 2.15 0 1 1 4.3 0v.06A1.8 1.8 0 0 0 15.74 5a1.8 1.8 0 0 0 1.98-.36l.04-.04a2.15 2.15 0 1 1 3.04 3.04l-.04.04A1.8 1.8 0 0 0 19 9.26a1.8 1.8 0 0 0 1.65 1.08h.15a2.15 2.15 0 1 1 0 4.3h-.06A1.8 1.8 0 0 0 19.4 15Z" />
+              </svg>
+            </button>
+            <div class="theme-popover" id="theme-popover" hidden>
+              <p class="eyebrow">Design</p>
+              <div class="theme-switcher" id="theme-switcher">
+                <button class="theme-chip" data-theme="dark" type="button">다크</button>
+                <button class="theme-chip" data-theme="light" type="button">라이트</button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main class="main">
+          <section class="welcome-row" id="overview">
+            <div>
+              <p class="eyebrow">대시보드</p>
+              <h2>안녕하세요, 관리자님</h2>
+            </div>
+            <nav class="dashboard-mode-tabs" aria-label="대시보드 표시 모드">
+              <a id="dashboard-live-link" href="dashboard.html?view=live">실시간 관제</a>
+              <a id="dashboard-replay-link" href="dashboard.html?view=replay&period=presentation-2022-feb-transformer-month-loop&frame=624&autoplay=1">운영 리플레이</a>
+            </nav>
+          </section>
+
+          <section class="notice-banner comparison-banner">
+            <div class="notice-copy">
+              <span>운영 비교</span>
+              <strong>기본 운영과 추천 운영의 예상 비용 차이를 확인하세요.</strong>
+            </div>
+            <div class="comparison-metrics">
+              <div>
+                <small>기본 운영</small>
+                <b id="notice-base-cost">약 0만원</b>
+              </div>
+              <div>
+                <small>추천 운영</small>
+                <b id="notice-policy-cost">약 0만원</b>
+              </div>
+              <div class="saving">
+                <small>비교치</small>
+                <b id="notice-saving-rate">0% 절감</b>
+              </div>
+              <a href="operation-detail.html?date=2022-02-27">비교 상세</a>
+            </div>
+          </section>
+
+          <section class="overview-grid">
+            <section class="summary-grid overview-summary" aria-label="핵심 운영 현황">
+              <article class="summary-card primary">
+                <span>현재 충전 요청</span>
+                <strong id="summary-request">842kWh</strong>
+                <p>지금 처리해야 하는 충전 수요</p>
+              </article>
+              <article class="summary-card">
+                <span>전체 배터리 잔량</span>
+                <strong id="summary-ess">67%</strong>
+                <p>충전소 보조 배터리 평균 잔량</p>
+              </article>
+              <article class="summary-card accent">
+                <span>전기요금 상태</span>
+                <strong id="summary-tariff">보통</strong>
+                <p>현재 시간대 전기요금 수준</p>
+              </article>
+            </section>
+
+            <aside class="panel operations-card" aria-label="운영 지표">
+              <div class="panel-title compact">
+                <div>
+                  <p class="eyebrow">운영 지표</p>
+                  <h3>오늘의 운영 현황</h3>
+                </div>
+              </div>
+              <div class="operations-metrics">
+                <div class="metric-line">
+                  <span>충전기 사용률</span>
+                  <strong id="metric-uptime">88%</strong>
+                </div>
+                <div class="metric-line">
+                  <span>오늘 예상 충전량</span>
+                  <strong id="metric-demand">842kWh</strong>
+                </div>
+                <div class="metric-line">
+                  <span>예상 절감액</span>
+                  <strong id="metric-savings">약 182천원</strong>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="dashboard-grid">
+            <section class="panel panel-map" id="map">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">충전소 위치</p>
+                  <h3>지도</h3>
+                </div>
+                <div class="filter-group" id="status-filters"></div>
+              </div>
+
+              <div class="map-board">
+                <div class="map-zoom-controls" aria-label="지도 확대 축소">
+                  <button id="map-zoom-out" type="button" aria-label="지도 축소">-</button>
+                  <button id="map-zoom-reset" type="button">100%</button>
+                  <button id="map-zoom-in" type="button" aria-label="지도 확대">+</button>
+                </div>
+                <div class="map-time-controls" aria-label="운영 리플레이 재생">
+                  <button id="timeline-toggle" class="timeline-play" type="button">재생</button>
+                  <div class="timeline-meta">
+                    <strong id="timeline-time">14:00</strong>
+                    <span id="timeline-caption">운영 리플레이</span>
+                  </div>
+                  <input id="timeline-range" type="range" min="0" max="23" value="14" step="1" aria-label="운영 시간" />
+                  <span id="timeline-duration" class="timeline-speed">24h</span>
+                </div>
+                <div class="map-canvas">
+                  <div class="map-water"></div>
+                  <div class="map-glow"></div>
+                  <div class="map-districts" aria-hidden="true">
+                    <span class="district district-a"></span>
+                    <span class="district district-b"></span>
+                    <span class="district district-c"></span>
+                    <span class="district district-d"></span>
+                    <span class="district district-e"></span>
+                    <span class="district district-f"></span>
+                  </div>
+                  <div class="map-landmarks" aria-hidden="true">
+                    <span class="landmark park-a"></span>
+                    <span class="landmark park-b"></span>
+                    <span class="landmark block-a"></span>
+                    <span class="landmark block-b"></span>
+                  </div>
+                  <div id="energy-flows" class="energy-flows"></div>
+                  <div id="station-nodes"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel" id="stations">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">충전소 현황</p>
+                  <h3>충전소 목록</h3>
+                </div>
+                <div class="station-tools">
+                  <div class="search-box">
+                    <input id="search-input" placeholder="지역 또는 충전소 검색" />
+                  </div>
+                  <button class="small-action-button" id="station-add-toggle" type="button">
+                    충전소 추가
+                  </button>
+                </div>
+              </div>
+              <form class="station-add-form" id="station-add-form" hidden>
+                <input id="station-add-id" placeholder="충전소 ID" />
+                <input id="station-add-name" placeholder="충전소명" />
+                <input id="station-add-region" placeholder="지역" />
+                <button class="primary-button" type="submit">추가</button>
+                <button class="ghost-button" id="station-add-cancel" type="button">취소</button>
+                <p id="station-admin-message" aria-live="polite"></p>
+              </form>
+              <div id="station-list" class="station-list"></div>
+            </section>
+
+            <section class="panel table-panel" id="operation">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">운영 안내</p>
+                  <h3>추천 운영</h3>
+                </div>
+              </div>
+              <div id="algo-panel" class="algo-panel"></div>
+            </section>
+
+            <section class="panel table-panel" id="tariff">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">요금 확인</p>
+                  <h3>전기요금 현황</h3>
+                </div>
+              </div>
+              <div id="tariff-list" class="tariff-list"></div>
+            </section>
+
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="app.js?v=replay-detail-sync-20260605"></script>
+  </body>
+</html>

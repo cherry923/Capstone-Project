@@ -1,0 +1,769 @@
+             sensors
+Article
+AST-GIN: Attribute-Augmented Spatiotemporal Graph
+Informer Network for Electric Vehicle Charging Station
+Availability Forecasting
+Ruikang Luo * , Yaofeng Song                    , Liping Huang         , Yicheng Zhang and Rong Su *
+
+
+                                          School of Electrical and Electronic Engineering, Nanyang Technological University, Singapore 639798, Singapore
+                                          * Correspondence: ruikang001@e.ntu.edu.sg (R.L.); rsu@ntu.edu.sg (R.S.)
+
+
+                                          Abstract: Electric Vehicle (EV) charging demand and charging station availability forecasting is
+                                          one of the challenges in the intelligent transportation system. With accurate EV station availability
+                                          prediction, suitable charging behaviors can be scheduled in advance to relieve range anxiety. Many
+                                          existing deep learning methods have been proposed to address this issue; however, due to the
+                                          complex road network structure and complex external factors, such as points of interest (POIs) and
+                                          weather effects, many commonly used algorithms can only extract the historical usage information
+                                          and do not consider the comprehensive influence of external factors. To enhance the prediction
+                                          accuracy and interpretability, the Attribute-Augmented Spatiotemporal Graph Informer (AST-GIN)
+                                          structure is proposed in this study by combining the Graph Convolutional Network (GCN) layer
+                                          and the Informer layer to extract both the external and internal spatiotemporal dependence of
+                                          relevant transportation data. The external factors are modeled as dynamic attributes by the attribute-
+                                          augmented encoder for training. The AST-GIN model was tested on the data collected in Dundee
+                                          City, and the experimental results showed the effectiveness of our model considering external factors’
+                                          influence on various horizon settings compared with other baselines.
+
+                                          Keywords: deep learning; attribute-augmented; prediction; weather; spatiotemporal
+
+
+Citation: Luo, R.; Song, Y.; Huang, L.;
+Zhang, Y.; Su, R. AST-GIN:
+Attribute-Augmented
+                                          1. Introduction
+Spatiotemporal Graph Informer                   Traffic information forecasting plays an important role in smart city management.
+Network for Electric Vehicle              Generally speaking, traffic information contains the link speed, traffic flow, vehicle density,
+Charging Station Availability             traveling time, facility usage condition, and so on [1]. With the rapid development of
+Forecasting. Sensors 2023, 23, 1975.      EV technologies, the proportion of EVs is growing annually [2], and Figure 1 shows the
+https://doi.org/10.3390/s23041975         worldwide EV sales statistics. However, limited endurance and charging stations and a
+Academic Editor: Felipe Jiménez           much longer charging time compared with the short refueling time of petrol cars cause
+                                          serious mileage anxiety for EV drivers [3]. As one of the most-significant infrastructures of
+Received: 30 December 2022                the EV system, EV charging stations have attracted more attention recently. Some studies
+Revised: 29 January 2023
+                                          have shown that EV charging behavior has obvious periodicity [4], thereby an accurate EV
+Accepted: 7 February 2023
+                                          charging station usage condition forecasting system can effectively alleviate range anxiety
+Published: 10 February 2023
+                                          and improve road efficiency [5].
+                                                Benefiting from the huge number of smart sensors, real-time station-level monitoring
+                                          has been realized [6]. Most canonical facility usage condition prediction methods are
+Copyright: © 2023 by the authors.
+                                          dependent on past traffic features to make predictions. However, EV charging station
+Licensee MDPI, Basel, Switzerland.        availability is much more complex than other time series forecasting issues because the
+This article is an open access article    future availability not only depends on the historical values, but is also influenced by
+distributed under the terms and           the topological relationship and complex external influences [7]. For example, within the
+conditions of the Creative Commons        campus or Central Business District (CBD) road section, the usage of the charging station
+Attribution (CC BY) license (https://     will be highly affected by the commute time. An obvious rise of availability can be observed
+creativecommons.org/licenses/by/          around the off-duty time, which is the reverse inside the residential area, even though the
+4.0/).                                    two road structures are similar [8]. Another example is that bad weather, such as heavy
+
+
+
+Sensors 2023, 23, 1975. https://doi.org/10.3390/s23041975                                                     https://www.mdpi.com/journal/sensors
+Sensors 2023, 23, 1975                                                                                                   2 of 15
+
+
+
+
+                         rain, can increaseand delay people’s commute and further affect charging station usage [9].
+                         It is quite a challenge to take into consideration the randomness caused by these external
+                         factors [10].
+
+
+
+
+                                               (a)                                          (b)
+                         Figure 1. EV sales statistics and EV charging station example. Global EV sales increased 108% from a
+                         4.2% market share in 2020 to a 8.3% market share in 2021 [2]. (a) Global EV sales; (b) electric vehicle
+                         charging hubs open in Dundee.
+
+                              With the development of deep learning technologies, several forecasting methods have
+                         been proposed to solve this issue [11], such as the Auto-Regressive and Integrated Moving
+                         Average (ARIMA) method [12], the Convolutional Neural Network (CNN) method, the
+                         Long Short-Term Memory (LSTM) method, the GCN method [13], and the Transformer-
+                         based method [14]. Each algorithm has its own strengths and limitations. However, most
+                         of the models do not have the capability to obtain the augmented attributes during the data
+                         processing. Correspondingly, the perception of external factors is poor. In the next section,
+                         a detailed introduction to the related work is given.
+                              Compared to the recent related works, we built a novel neural network extracting
+                         both spatiotemporal information and external influences to predict the charging station
+                         usage condition. The contributions can be summarized as follows:
+                         •    As far as we know, our study is one of the few research works on the deep learning
+                              approaches for the EV charging station availability forecasting problem.
+                         •    The AST-GIN’s structure is firstly proposed to deal with the EV charging station avail-
+                              ability forecasting problem by combining the Attribute Augmentation Unit (A2Unit),
+                              the GCN, and the Informer network.
+                         •    The proposed AST-GIN model was verified and tested on real-world data. The
+                              comparison results showed that the AST-GIN has better prediction capability over
+                              different horizons and metrics.
+                              The rest of the work is arranged as follows: The second section describes the related
+                         research on deep learning approaches for traffic facility usage forecasting and external
+                         factors’ influence during the time series prediction. The third section illustrates the problem
+                         statement and proposed model structure. The fourth section shows the detailed experi-
+                         ments with an analysis. The final section summarizes the contributions and possible future
+                         plans.
+
+                         2. Related Research
+                         2.1. EV Charging Issue
+                              Recent research has shown that charging is a challenge for the operation of a fleet
+                         of EVs, since frequent charging sessions are needed [15]. Alleviating charging station
+                         congestion has become significant to improve the efficiency of charging infrastructure
+                         management [16,17]. Two main research directions for the EV charging problem have been
+                         studied recently. One direction focuses on modeling individual EV charging loads and
+                         charging stations. The objective is to predict the parameters of the charging load profiles
+                         for a smart charging management system [18]. Existing studies mainly apply statistical
+Sensors 2023, 23, 1975                                                                                            3 of 15
+
+
+
+
+                         models [19], such as Gaussian mixture models [18], and deep learning approaches [20],
+                         such as a hybrid LSTM neural network [21,22], to forecast charging loads at EV charging
+                         stations. In [23], the authors reviewed the most-popular techniques for EV load modeling,
+                         including deterministic and probabilistic methods. From short-term to long-term perspec-
+                         tive, researchers have proposed several forecasting methods. Utilizing the advantages of
+                         the Internet of Things (IoT) technology, the real-time interactional view of charging stations
+                         and the server-based forecasting application have been realized [24]. In [25], the authors
+                         proposed a daily joint adversarial generation interval-forecasting method for EV charging
+                         load distribution by considering the influence of the spatial correlation and characterizing
+                         the randomness. Some researchers even presented a mid- and long-term systematic method
+                         to predict the additional loads of EV charging by considering the EV charging profiles
+                         and future EV ownership [26]. The other direction analyzes modeling and predicting the
+                         charging occupancy profile at the chargers, which is quite similar to the parking avail-
+                         ability prediction problem [27,28]. The purpose is to design the scheduling algorithm to
+                         allocate EVs among eligible chargers to realize the global or local optimal charging waiting
+                         plan [29,30].
+
+                         2.2. Canonical Forecasting Model
+                              For the traffic forecasting issue, the approaches have undergone several stages, and
+                         the methods can generally be divided into two types: canonical models and deep-learning-
+                         based models [31]. Canonical forecasting models usually build mathematical models and
+                         treat traffic behavior as the conditional process. There are many famous models, such as
+                         the Historical Average (HA) model, the K-nearest neighbor model, the ARIMA model, and
+                         Support Vector Regression (SVR) model [32]. Most of them consider the trend of the data
+                         and make the strong assumption that time series data are stable, which makes it difficult
+                         for them to respond to the rapid change of the inputs [33].
+
+                         2.3. Deep Learning Forecasting Model
+                              Recently, deep-learning-based forecasting methods have been widely applied to solve
+                         time series prediction problems [34]. Benefiting from their capability to extract nonlinear
+                         relationships across an input sequence, the Recurrent Neural Network (RNN) model,
+                         the Stacked Autoencoding Neural Network (SAE), the Gated Recurrent Unit (GRU) [35],
+                         LSTM [36], Transformer [37], and their variants have been verified to be much more efficient
+                         at extracting temporal information than canonical forecasting models. To adaptively predict
+                         comprehensive traffic conditions, some works have been performed to improve the results,
+                         such as integrating a GCN to extract the spatial dependencies [13,38].
+
+                         2.4. External Factors in Forecasting
+                              As mentioned above, external factors have an influence on the future usage conditions
+                         of EV stations. To integrate the information of a variety of external inputs, such as sur-
+                         rounding POIs [39] and weather conditions [40], previous studies have demonstrated great
+                         efforts, leveraging multi-source data to specifically design the model structure. In [41], the
+                         authors proposed an LSTM-based structure integrating an encoder to aggregate external in-
+                         formation and treat multi-source data as the sequential inputs. In [35], the authors applied
+                         the feature fusion technology to process the input weather data for traffic prediction.
+                              In conclusion, existing methods can be further improved by considering external
+                         information’s influence. Therefore, motivated by the related works and the challenges,
+                         the AST-GIN network for EV charging station availability forecasting, which integrates
+                         both spatiotemporal and external factors as the input to enhance the model’s perception
+                         capability during predicting, is proposed. In the next section, the architecture and principles
+                         of the proposed model are illustrated.
+Sensors 2023, 23, 1975                                                                                                 4 of 15
+
+
+
+
+                         3. Methodology
+                         3.1. Definition of EV Charging Station Availability
+                               In this section, we first give the mathematical definition of EV charging station avail-
+                         ability. Availability represents the occupancy status of EV charging facilities, such as
+                         charging connectors. If all connectors in a charging station are occupied for charging, the
+                         availability is regarded as 0. On the other hand, if all connectors are in the unused status,
+                         the availability is regarded as 1.
+                               Based on the definition, the availability of the charging station can be calculated as:
+
+                                                                         Mi,usedconnector
+                                                             xit = 1 −                                                    (1)
+                                                                         Mi,allconnector
+
+                         where Mi,usedconnector is the number of charging connectors being used at station i at time t;
+                         Mi,allconnector is the total number of charging connectors at station i at time t. Herein, the
+                         ultimate target variable is x, where xit is the availability of the charging station i at time t.
+                         Note that the value of xit ∈ [0, 1].
+                                Before introducing the model for predicting the availability of the EV charging stations,
+                         we subsequently describe the attributes that exert an impact on the our target variable x,
+                         i.e., the charging station availability.
+
+                         3.2. Incorporating the Attributes
+                         3.2.1. Weather Condition Attribute
+                               The purpose of this study was to predict future EV stations’ usage condition based
+                         on historical states and associated information. Based on the prior knowledge introduced,
+                         the demand of EVs has a strong periodicity, and external factors have a high correlation
+                         with the usage of EVs. As shown in Figure 2, the weather is classified into 5 types: sunny,
+                         cloudy, foggy, light rain, and heavy rain, which are labeled 1 to 5. To better present the
+                         relationship, the weather data were normalized in the range of 0 to 1. Therefore, the Y-axis
+                         for the availability data refers to the availability of the chargers in Figure 3. At the same
+                         time, the Y-axis for the weather data refers to the different kinds of weather. The higher the
+                         value, the worse the weather. The graph shows a general pattern by which the availability
+                         becomes higher when the weather becomes better and vice versa. Meanwhile, the time
+                         index in the figure refers to the recording time. In this work, the weather factor is organized
+                         as a matrix W, where Wit ∈ [0, 1] is the weather condition of location i at time t.
+
+                         3.2.2. Road Network and POI Attributes
+                              In this paper, the road network was treated as a weighted undirected graph G = {V, E}.
+                         EV stations work as nodes inside the graph, which are denoted by |V | = N, where N is the
+                         number of stations and E represents the graph edge set representing stations’ connectivity.
+                         The corresponding adjacency matrix A ∈ R N × N can be constructed based on node and
+                         edge information. With the road map, based on the latitude and longitude of the charging
+                         points, the road distance between EV stations can be estimated. The adjacency matrix
+                         elements are calculated using the Gaussian kernel weighting function [42]:
+                                                        
+                                                         exp(− dist(va ,vb )2 ), dist(v , v ) ≤ κ
+                                                                     σ2                 a b
+                                                 A ab =                                                          (2)
+                                                         0, otherwise
+
+                         where dist(v a , vb ) represents the distance between station v a and station vb ; σ is the standard
+                         deviation of dist(v a , vb ); κ is the filter removing small distances.
+Sensors 2023, 23, 1975                                                                                               5 of 15
+
+
+
+
+                         Figure 2. AST-GIN. architecture.
+
+
+
+
+                         Figure 3. Weather and EV charging station availability.
+
+                             Besides, we also integrated the POIs’ distribution information as an external factor,
+                         which is denoted as
+
+                                                               [ poi1 , poi2 , . . . , poin ]                           (3)
+                         where poii is the POI category score for location i. Assume we have k POI categories, then
+                         we have poii ∈ {1, 2, . . . , k}.
+
+                         3.3. Problem Formulation
+                               At time t, the EV charging station availability matrix, Xt ∈ R N ×C , contains the
+                         high-dimensional information of EV station availability, where C is the hyperparame-
+                         ter, which manually defined. Thus, the known L steps’ historical usage data are defined
+                          X = [ Xt− L , Xt− L+1 , ..., Xt ] and used as partial inputs to predict the next M steps’ states
+                         as
+                          Ŷt+1 , ..., Ŷt+ M .
+Sensors 2023, 23, 1975                                                                                                         6 of 15
+
+
+
+
+                              Further, the influence of external factors is regarded as the affiliated attributes matrix F.
+                         These factors construct an attribute matrix [ F1 , F2 , ..., Fl ], where l is the dimension of the at-
+                         tribute information. At time t, the set of j-th affiliated information is Fj = [ jt− L , jt− L+1 , ..., jt ].
+                              In conclusion, the issue of EV charging station availability forecasting considering
+                         external factors is refined to finding the relationship function f based on the historical
+                         usage data X, attribute matrix F, and road graphic structure G, to achieve the future usage
+                         values Ŷ:                                           
+                                                            Ŷt+1 , ..., Ŷt+ M = f ( G, X, F )                                 (4)
+                         where Ŷt+m means the estimated value of Xt+m at the future time t + M, m = 1, 2, . . . , M,
+                         and M is the prediction horizon.
+
+                         3.4. AST-GIN Architecture
+                               In this subsection, the principle of the AST-GIN model is introduced in detail. The
+                         AST-GIN model contains three layers: A2Unit, which can integrate the external information,
+                         the GCN layer, and the Informer layer. The historical time series data and external data are
+                         firstly fed into the A2Unit for attribute augmentation. Then, the processed information is
+                         fed into the GCN layer for spatial information extraction. Finally, the Informer layer will
+                         take the outputs from the GCN layer to extract the temporal dependencies. The overview
+                         of the architecture of the AST-GIN is illustrated in Figure 4.
+
+
+
+
+                         Figure 4. GCN layer architecture.
+
+                         3.4.1. A2Unit
+                               As mentioned, both historical data and external factors affect the EV charging con-
+                         ditions. Thus, different from traditional time series deep learning forecasting model,
+                         additional structure aggregating external factors are needed [41]. To comprehensively take
+                         external factors’ influence into consideration, dynamic attributes and static attributes are
+                         selected, respectively, for the objective region. EV stations’ historical availability tensor X,
+                         road structure G, and two types of attribute matrices are integrated into the A2Unit for
+                         augmentation.
+                               We use α ∈ R N × p to represent the static attribute matrix containing p categories’
+                         attributes, and α is time-invariant. Similarly, β ∈ R N ×(w∗t) represents w different dynamic
+                         attributes with cumulative effects, which change over time. To aggregate the cumulative
+Sensors 2023, 23, 1975                                                                                         7 of 15
+
+
+
+
+                         influence of dynamic attributes, the L length historical window is selected. Thus, the final
+                         augmented matrix processed by A2Unit at time t is stated as:
+                                                            h                                i
+                                                      Et = Xt , α, βt− L , βt− L+1 , ..., βt                      (5)
+
+                         where Et ∈ R N ×( p+1+w∗( L+1)) , and the same processing procedure is applied for every
+                         time stamp inside traffic feature matrix X.
+
+                         3.4.2. GCN Layer
+                                The distance between the vehicle location and the target charging station obviously
+                         influences the decision of the drivers [43]. To enhance the understanding of the EV charg-
+                         ing behavior pattern, the spatial dependencies among charging stations were taken into
+                         consideration. Some related works have proposed CNN-based neural networks to deal
+                         with the spatial prediction issue [44,45]. However, the distribution of EV charging stations
+                         connected by the non-Euclidean road network cannot be processed well by a CNN. Thus,
+                         here, the GCN was selected to extract the spatial dependencies of the input data, which
+                         still retains the convolutional functionality [46]. The framework of the GCN is shown in
+                         Figure 5.
+
+
+
+
+                         Figure 5. Temporal Informer layer structure.
+
+                              In principle, graph convolution neural network perform the convolution over the
+                         nodes of the graph to capture the spatial information, which is similar to image processing
+                         by convolution neural networks.
+                              The general convolution theorem in the spatial domain states that
+
+                                                           f ∗ g = F −1 {F { f } · F { g}}                        (6)
+
+                         where g is the kernel operated on function f .
+                             When performing the convolution in the spectral domain, the graph convolution
+                         formula can be expressed as
+
+                                                        gθ ∗ x = Ugθ U T x = Ugθ 0 (Λ)U T x                       (7)
+
+                         where gθ is the graph convolutional kernel, U is the eigenvector matrix, and Λ is the
+                         diagonal matrix of eigenvalues.
+Sensors 2023, 23, 1975                                                                                               8 of 15
+
+
+
+
+                             To simplify the computation, people usually perform the first-order Chebyshev ap-
+                         proximation [46]. The graph convolution formula now is reorganized as
+                                                                        1         1              1      1
+                                                gθ ∗ x = θ ( In + D − 2 AD − 2 ) x = θ ( D̃ − 2 Ã D̃ − 2 ) x           (8)
+                         where D is the diagonal degree matrix, Dii = ∑ j Aij ; Ã = A + In ; D̃ii = ∑ j Ãij .
+                             Furthermore, the GCN convolutional formula can be rewritten as:
+                                                                              1        1
+                                                            H l +1 = γ( D̃ − 2 Ã D̃ − 2 H l W l )                      (9)
+
+                         where γ is the activation function; H l +1 is the l-th layer output.
+
+                         3.4.3. Informer Layer
+                              It is significant to obtain the global temporal dependency while forecasting. With
+                         the rapid development of Transformer-like neural networks, which employ an encoder–
+                         decoder architecture, the time series prediction ability has been improved greatly based on
+                         the attention mechanism compared to some canonical deep learning methods [47], such
+                         as the GRU and LSTM. Thus, one of the latest variants of Transformer, Informer [48], was
+                         applied here as the temporal extraction layer to understand the global sequence. The
+                         structure of Informer is shown as Figure 6.
+
+
+
+
+                         Figure 6. Locations of EV charging points. Charging points distribution in Dundee City is shown in
+                         the figure.
+
+                         3.4.4. Loss Function
+                              During the model training, the objective was to eliminate the gap between the ground
+                         truth and predicted value. Thus, the loss function can be written as
+
+                                                              loss = kYt − Ŷt k + λLreg                              (10)
+
+                               Yt and Ŷt represent the recorded value and the predicted value, respectively. λLreg [49]
+                         is the L2 regularization term to avoid overfitting during training.
+
+                         4. Empirical Analysis
+                              To evaluate the AST-GIN model’s performance, the necessary experiments were
+                         performed on the EV charging station availability dataset. We chose five efficient time
+                         series forecasting baseline models for comparison. During the experiment, the performance
+Sensors 2023, 23, 1975                                                                                            9 of 15
+
+
+
+
+                         of the AST-GIN model with a static external factor only, the model with a dynamic external
+                         factor only, and the model with both static and dynamic factors were evaluated separately.
+
+                         4.1. Dataset and Preprocessing
+                         4.1.1. EV Charging Station Data
+                               Dundee EV charging dataset: This dataset is a record of the EV charging behaviors in
+                         Dundee, Scotland, available at https://data.dundeecity.gov.uk/dataset/ev-charging-data
+                         (accessed on 10 October 2022). There are 57 charging points in Dundee, which can be di-
+                         vided into three types: slow chargers, fast chargers, and rapid chargers. In total, three valid
+                         datasets recorded during three different time periods, 01/09/17 to 01/12/17, 02/12/17 to
+                         02/03/18, and 05/03/18 to 05/06/18, are accessible. Meanwhile, the geographical locations
+                         of all the charging points are also provided, and they are shown in Figure 7.
+
+
+
+
+                         Figure 7. Accuracy statistics of all models.
+
+                              In the present study, the dataset we used was recorded during 05/03/18 to 05/06/18.
+                         There were 16773 charging sessions recorded in total, and each of the charging session
+                         records contains the charging point ID, charging connector ID, starting and ending charging
+                         time, total consumed electric power, geographical location, and type of charging point.
+                         There were 40 slow chargers with 5894 charging sessions recorded, 8 fast chargers with
+                         1416 charging sessions recorded, and 9 rapid chargers with 9463 charging sessions recorded.
+                              Moreover, Dundee’s weather data are available, which is the weather record in Dundee
+                         City. The weather is recorded every hour, and each record includes the general description
+                         of the weather, temperature, wind, humidity, and barometric pressure.
+
+                         4.1.2. Static External Factors
+                              We classified the surroundings of the charging points into eight types: transportation
+                         services, catering services, shopping services, education services, accommodation, medical
+                         services, living services, and other. The category of the surroundings with the largest
+                         proportion was labeled as the POI value of a charging point based on its geographical
+                         location.
+
+                         4.1.3. Dynamic External Factors
+                             The weather for Dundee was divided into five types: sunny, cloudy, foggy, light rain,
+                         and heavy rain, with different labels from 1 to 5. Since the time interval of the weather data
+                         from the source dataset was 1 h, the weather in the covered period was regarded as the
+                         same, which means that, if the weather at 17:50 is recorded as sunny, the weather at 18:20
+                         would be labeled as sunny.
+Sensors 2023, 23, 1975                                                                                           10 of 15
+
+
+
+
+                         4.2. Settings
+                         4.2.1. Evaluation Metrics
+                              In this study, five commonly used metrics were selected to evaluate the model’s
+                         forecasting performance, including the Root-Mean-Squared Error (RMSE), the Mean Abso-
+                         lute Error (MAE), the Accuracy, the Coefficient of Determination (R2 ), and the Explained
+                         Variance Score (EVS). Each of the metrics is defined as follows:
+                                                              v
+                                                              u 1 M N
+                                                              u
+
+                                                                 MN j∑     ∑ (yij − ŷij )2
+                                                     RMSE = t                                                  (11)
+                                                                       =1 i =1
+
+                                                                   1 M N
+                                                                  MN j∑  ∑ |yij − ŷi, |
+                                                        MAE =                                                       (12)
+                                                                      =1 i =1
+
+                                                                                               2
+                                                                  ∑ jM=1 ∑iN=1 (yij − ŷij )
+                                                       R2 = 1 −                           2
+                                                                                                                    (13)
+                                                                                  j
+                                                                   ∑ jM=1 ∑iN=1 (yi − Ȳ)
+
+                                                                             kY − Ŷk2
+                                                          Accuracy = 1 −                                            (14)
+                                                                               k Y k2
+
+                                                                         Var {Y − Ŷ }
+                                                           EVS = 1 −                                                (15)
+                                                                          Var {Y }
+                         where yij and ŷij represent the ground truth availability and the predicted one for the i − th
+                         charging station at time j. M is the time instant number; N is the charging station number;
+                         Y and Ŷ are the set of yij and ŷij , respectively; Ȳ is the average of Y.
+
+                         4.2.2. Baseline Settings
+                              As far as we know, there is no directly published model for this specific problem;
+                         hence, typical models were selected for comparison. Comparing the proposed model with
+                         the typical sequence models of the GRU, LSTM, Transformer, and Informer involved in our
+                         model, we can testify to the importance of incorporating the spatial dependencies captured
+                         by the GCN. As expected, when we compared the proposed model with Informer, the
+                         significance of the GCN in the architecture can be verified. The baselines are described
+                         as follows:
+                         •    GRU: The commonly used time series model, which has been proven effective in
+                              traffic prediction problems and can alleviate the problem of gradient explosion and
+                              vanishing.
+                         •    LSTM: Together with the GRU, they are two popular variants of the RNN. LSTM has
+                              a more complex structure than the GRU.
+                         •    Transformer: The classic Transformer model with the self-attention mechanism [37].
+                         •    Informer: A new Transformer variant proposed to process the long-sequence predic-
+                              tion issue without spatial dependencies’ extraction.
+                         •    STTN: A new proposed framework utilizing two Transformer blocks to capture both
+                              spatial and long-range bidirectional temporal dependencies across multiple time
+                              steps [50].
+
+                         4.2.3. Hyperparameters
+                              In this study, a three-layer GCN structure was used. For each Informer block, the
+                         number of encoder layers was 2, while the number of decoder layers is 3. During the
+                         experiment, the data were randomly divided into 50% for training, 33% for the evaluation,
+                         and the remaining 17% for testing. The network was optimized using the Adam optimizer.
+                         The dropout rate was set to 0.05. The learning rate started from e−4 and decayed by 10 times
+Sensors 2023, 23, 1975                                                                                                      11 of 15
+
+
+
+
+                                    every two epochs. The total number of epochs was 50 with an early stopping criterion. The
+                                    batch size was chosen as 32, and the whole network was trained on a GPU RTX3060.
+
+                                    4.3. Experimental Results
+                                        We used five state-of-the-art baselines to compare the performance of our proposed
+                                    AST-GIN model, including the GRU, LSTM, Transformer, Informer, and STTN. Based on the
+                                    30-minute time interval of the EV charging availability dataset, we deployed the selected
+                                    models to predict the availability in the next 30 min, 60 min, 90 min, and 120 min horizons.
+                                    The numerical results are shown in Table 1.
+
+                                    Table 1. Forecasting results of the AST-GIN and baseline models.
+
+                                                                                                             AST-GIN
+  Horizon (min)           Metric     GRU       LSTM      Transformer      Informer     STTN                             POI +
+                                                                                                   POI     Weather
+                                                                                                                       Weather
+                          RMSE       0.1726    0.2431       0.2923         0.2112       0.171     0.1215   0.1224       0.1174
+                           R2        0.7665    0.4918       0.4021         0.6583      0.7183     0.8778   0.8709       0.8803
+         30                EVS       0.7579    0.4879       0.3746         0.6511      0.7175     0.8787   0.8704       0.8801
+                          MAE        0.1041    0.1683       0.2365         0.1556      0.1331     0.0784   0.0759       0.067
+                         Accuracy    0.7531    0.6493       0.5589         0.7293      0.7521     0.8382   0.8322       0.8388
+                          RMSE       0.1820    0.2321       0.2862         0.2326      0.2221     0.1446   0.1471       0.1438
+                           R2        0.6851    0.5047       0.3952         0.5467      0.6248     0.8149   0.8174       0.8227
+         60                EVS       0.6789    0.4941       0.3782         0.5376      0.6276     0.8149   0.8174       0.8225
+                          MAE        0.1168    0.1735       0.2385         0.1870      0.1679     0.0827   0.0864       0.0757
+                         Accuracy    0.7138    0.6424       0.5534         0.6798      0.6728     0.8020   0.7994       0.8037
+                          RMSE       0.2269    0.2336       0.2848         0.2613      0.2118     0.1682   0.1674       0.1687
+                           R2        0.5362    0.496        0.3335         0.4806      0.5718     0.7652   0.7653       0.7605
+         90                EVS       0.5085    0.485        0.3662         0.4695      0.5634     0.7641   0.7652       0.7604
+                          MAE        0.1548    0.1741       0.2377         0.1976      0.1683     0.0957   0.0982       0.1017
+                         Accuracy    0.6508    0.6406       0.5491         0.6581       0.693     0.7713   0.7731       0.7713
+                          RMSE       0.2372    0.2354       0.2896         0.2882      0.3264     0.1834   0.1852       0.1851
+                           R2        0.5114    0.4743       0.3237         0.4553      0.5581     0.7162   0.7138       0.7134
+        120                EVS       0.4823    0.4675       0.3624         0.3934      0.5524     0.7154   0.7131       0.7131
+                          MAE        0.1565    0.1769       0.2369         0.2128      0.1643     0.1134   0.1106       0.1123
+                         Accuracy    0.6481    0.6329       0.5473         0.6238      0.6839     0.7517   0.7496       0.7496
+
+
+                                         For both short-term (30 and 60 min) and long-term (90 and 120 min) EV charging
+                                    station availability forecasting, the AST-GIN model effectively captured the temporal
+                                    dependance of the data and outperformed the baseline models, as measured by all the
+                                    metrics. In the 30 min forecasting, AST-GIN model with the dynamic external factor
+                                    achieved an accuracy of 0.8388, while the best model, the STTN, among the baseline models
+                                    achieved an accuracy of 0.7521. The AST-GIN outperformed the STTN in the 90 min
+                                    horizon with a 11.54% higher accuracy. In the long-term forecasting, 120 min for example,
+                                    the AST-GIN still had the best performance with the highest accuracy compared to the
+                                    other baseline models. The accuracy of the AST-GIN, 0.7517, was 8.97% higher than the
+                                    best model, the STTN, among the baseline models.
+                                         Among the three kinds of external factors used, which were the static factors only, dy-
+                                    namic factors only, and the combination of both of the factors, the use of the external factors’
+                                    combination led to a better performance in general for the prediction horizons of 30 min and
+Sensors 2023, 23, 1975                                                                                                              12 of 15
+
+
+
+
+                         60 min. The combination of both static and dynamic factors led to higher prediction ac-
+                         curacy in the relatively short-term horizon. The difference among static the factors only,
+                         dynamic factors only, and the combination became negligible in the relatively long-term
+                         horizon.
+                               For a better comparison, we plot the prediction accuracy of all models in terms of
+                         all prediction horizons in Figure 7. Measured by the explicitly interpretable accuracy
+                         metric, it can be observed that the overall forecasting capability of the proposed model
+                         was better than the baselines over all prediction horizons. For the prediction horizons of
+                         90 min and 120 min, the proposed AST-GIN performed better by incorporating either the
+                         POI feature or the weather feature than when incorporating both factors. The external fac-
+                         tors’ combination should be considered extensively for short-term prediction. Such results
+                         showed that we could distinguish the attribute inputsin terms of short-term prediction or
+                         long-term prediction.
+
+                         4.4. Results’ Analysis
+                              To analyze the prediction results of the proposed model and the benchmarks, we plot
+                         the cumulative distribution function of the absolute prediction errors in Figure 8, where the
+                         absolute error was calculated as |yij − ŷij |. Note that, as shown in Table 1, the prediction
+                         results of Informer were always better than that of Transformer; hence, in this part, we
+                         excluded the results of Transformer in Figure 8.
+
+
+                                          Horizon = 30 Mins                                      Horizon = 60 Mins
+                                1                                                      1
+                                                                 GRU                                                   GRU
+                                                                 STTN                                                  STTN
+                         CDF                                                    CDF
+                               0.5                               Informer             0.5                              Informer
+                                                                 AST-GIN                                               AST-GIN
+
+                                0                                                      0
+                                     0         0.2         0.4            0.6               0         0.2        0.4          0.6
+                                            absolute error                                        absolute error
+                                          Horizon = 90 Mins                                     Horizon = 120 Mins
+                                1                                                      1
+                                                                 GRU                                                   GRU
+                                                                 STTN                                                  STTN
+                         CDF                                                    CDF
+                               0.5                               Informer             0.5                              Informer
+                                                                 AST-GIN                                               AST-GIN
+
+                                0                                                      0
+                                     0   0.1         0.2   0.3      0.4                     0   0.1     0.2    0.3      0.4
+                                               absolute error                                         absolute error
+
+                         Figure 8. Cumulative distribution function of the absolute error by each model.
+
+                               From the CDF of the errors, we can find that the absolute error of the proposed
+                         AST-GIN model occurred earlier and faster than the three baselines when the prediction
+                         horizons were 90 min and 120 min. This means that the long-term prediction performance
+                         is of great significance for the EV charging station availability estimation, which is because
+                         the drivers can know in advance with an adequate time to head to the available station.
+                               In addition, inevitably, noise during the data collection, such as sensor error and system
+                         delay, may undermine the model’s forecasting capability. To verify the noise immunity of
+                         the AST-GIN model, the model’s robustness was tested via perturbation experiments. The
+                         normalized random noise, which obeys a Gaussian distribution, was added to the data to
+                         check the robustness. The resultant fluctuation was small.
+
+                         5. Conclusions
+                              In this paper, a deep learning model, the AST-GIN, was proposed and verified for EV
+                         charging station availability forecasting considering external factors’ influence. The model
+                         contained an A2Unit layer, GCN layer, and Informer layer to augment time series traffic fea-
+                         tures and extract the spatiotemporal dependencies of EV charging station usage conditions.
+Sensors 2023, 23, 1975                                                                                                                  13 of 15
+
+
+
+
+                                   The AST-GIN and the baselines were tested on the data collected in Dundee City. The ex-
+                                   periments showed that the AST-GIN has better forecasting capability over various horizons
+                                   and metrics. To summarize, the AST-GIN can effectively comprehensively consider the
+                                   external attribute influences and predict the EV charging station usage condition. Future
+                                   plans regarding the robustness are ongoing to further improve the prediction system.
+
+                                   Author Contributions: Conceptualization, R.L.; Methodology, R.L.; Software, Y.S.; Validation, Y.S.;
+                                   Formal analysis, Y.Z.; Writing—original draft, R.L.; Writing—review & editing, L.H.; Visualization,
+                                   L.H.; Supervision, R.S. All authors have read and agreed to the published version of the manuscript.
+                                   Funding: This study is supported under the RIE2020 Industry Alignment Fund—Industry Collabora-
+                                   tion Projects (IAF-ICP) Funding Initiative, as well as cash and in-kind contribution from the industry
+                                   partner(s), and A*STAR under its Industry Alignment Fund (LOA Award I1901E0046).
+                                    Institutional Review Board Statement: Not applicable.
+                                    Informed Consent Statement: Not applicable.
+                                    Data Availability Statement: The dataset used in this paper can be found at https://data.dundeecity.
+                                    gov.uk/dataset/ev-charging-data (accessed on 10 October 2022).
+                                    Conflicts of Interest: The authors declare no conflict of interest.
+
+References
+1.    Luo, R.; Su, R. Traffic signal transition time prediction based on aerial captures during peak hours. In Proceedings of the 2020
+      16th International Conference on Control, Automation, Robotics and Vision (ICARCV), Shenzhen, China, 13–15 December 2020;
+      IEEE: Piscataway, NJ, USA, 2020; pp. 104–110.
+2.    Irle, R. Global Plug-In Vehicle Sales Reached over 3, 2 Million in 2020. EV Volumes. Available online: https://www.ev-volumes.
+      com (accessed on 10 October 2022).
+3.    Storandt, S.; Funke, S. Cruising with a battery-powered vehicle and not getting stranded. In Proceedings of the AAAI Conference
+      on Artificial Intelligence, Stanford, CA, USA, 8–12 October 2012; Volume 26.
+4.    Qian, K.; Zhou, C.; Allan, M.; Yuan, Y. Load model for prediction of electric vehicle charging demand. In Proceedings of the 2010
+      International Conference on Power System Technology, Hangzhou, China, 24–28 October 2010 ; IEEE: Piscataway, NJ, USA, 2010;
+      pp. 1–6.
+5.    Kondo, Y.; Kato, H.; Ando, R.; Suzuki, T.; Karakama, Y. To what extent can speed management alleviate the range anxiety of EV?
+      In Proceedings of the 2013 World Electric Vehicle Symposium and Exhibition (EVS27), Barcelona, Spain, 17–20 November 2013;
+      IEEE: Piscataway, NJ, USA, 2013; pp. 1–8.
+6.    Deilami, S.; Masoum, A.S.; Moses, P.S.; Masoum, M.A. Real-time coordination of plug-in electric vehicle charging in smart grids
+      to minimize power losses and improve voltage profile. IEEE Trans. Smart Grid 2011, 2, 456–467. [CrossRef]
+7.    Xiong, Y.; Gan, J.; An, B.; Miao, C.; Bazzan, A.L. Optimal electric vehicle fast charging station placement based on game theoretical
+      framework. IEEE Trans. Intell. Transp. Syst. 2017, 19, 2493–2504. [CrossRef]
+8.    Alface, G.; Ferreira, J.C.; Pereira, R. Electric vehicle charging process and parking guidance app. Energies 2019, 12, 2123. [CrossRef]
+9.    Yan, J.; Zhang, J.; Liu, Y.; Lv, G.; Han, S.; Alfonzo, I.E.G. EV charging load simulation and forecasting considering traffic jam and
+      weather to support the integration of renewables and EVs. Renew. Energy 2020, 159, 623–641. [CrossRef]
+10.   Zhu, J.; Wang, Q.; Tao, C.; Deng, H.; Zhao, L.; Li, H. AST-GCN: Attribute-augmented spatiotemporal graph convolutional
+      network for traffic forecasting. IEEE Access 2021, 9, 35973–35983. [CrossRef]
+11.   Huang, C.W.; Chiang, C.T.; Li, Q. A study of deep learning networks on mobile traffic forecasting. InProceedings of the 2017
+      IEEE 28th Annual International Symposium on Personal, Indoor, and Mobile Radio Communications (PIMRC), Montreal, QC,
+      Canada, 8–13 October 2017 ; IEEE: Piscataway, NJ, USA, 2017; pp. 1–6.
+12.   Siami-Namini, S.; Tavakoli, N.; Namin, A.S. A comparison of ARIMA and LSTM in forecasting time series. In Proceedings of the
+      2018 17th IEEE International Conference on Machine Learning and Applications (ICMLA), Orlando, FL, USA, 17–20 December
+      2018 ; IEEE: Piscataway, NJ, USA, 2018; pp. 1394–1401.
+13.   Jiang, W.; Luo, J. Graph neural network for traffic forecasting: A survey. arXiv 2021, arXiv:2101.11174.
+14.   Yang, J.; Chen, H.; Xu, Y.; Shi, Z.; Luo, R.; Xie, L.; Su, R. Domain adaptation for degraded remote scene classification. In
+      Proceedings of the 2020 16th International Conference on Control, Automation, Robotics and Vision (ICARCV), Shenzhen, China,
+      13–15 December 2020 ; IEEE: Piscataway, NJ, USA, 2020; pp. 111–117.
+15.   Amara-Ouali, Y.; Goude, Y.; Massart, P.; Poggi, J.M.; Yan, H. A review of electric vehicle load open data and models. Energies
+      2021, 14, 2233. [CrossRef]
+16.   Bikcora, C.; Refa, N.; Verheijen, L.; Weiland, S. Prediction of availability and charging rate at charging stations for electric vehicles.
+      In Proceedings of the 2016 International Conference on Probabilistic Methods Applied to Power Systems (PMAPS), Beijing, China,
+      16–20 October 2016 ; IEEE: Piscataway, NJ, USA, 2016; pp. 1–6.
+Sensors 2023, 23, 1975                                                                                                                14 of 15
+
+
+
+
+17.   Kim, T.Y.; Cho, S.B. Predicting residential energy consumption using CNN-LSTM neural networks. Energy 2019, 182, 72–81.
+      [CrossRef]
+18.   Lee, Z.J.; Li, T.; Low, S.H. ACN-Data: Analysis and applications of an open EV charging dataset. In Proceedings of the Tenth
+      ACM International Conference on Future Energy Systems, Phoenix, AZ, USA, 25–28 June 2019; pp. 139–149.
+19.   Flammini, M.G.; Prettico, G.; Julea, A.; Fulli, G.; Mazza, A.; Chicco, G. Statistical characterisation of the real transaction data
+      gathered from electric vehicle charging stations. Electr. Power Syst. Res. 2019, 166, 136–150. [CrossRef]
+20.   Majidpour, M.; Qiu, C.; Chu, P.; Pota, H.R.; Gadh, R. Forecasting the EV charging load based on customer profile or station
+      measurement? Appl. Energy 2016, 163, 134–141. [CrossRef]
+21.   Hochreiter, S.; Schmidhuber, J. Long short-term memory. Neural Comput. 1997, 9, 1735–1780. [CrossRef] [PubMed]
+22.   Ma, T.Y.; Faye, S. Multistep electric vehicle charging station occupancy prediction using hybrid LSTM neural networks. Energy
+      2022, 244 , 123217. [CrossRef]
+23.   Ahmadian, A.; Mohammadi-Ivatloo, B.; Elkamel, A. A review on plug-in electric vehicles: Introduction, current status, and load
+      modeling techniques. J. Mod. Power Syst. Clean Energy 2020, 8, 412–425. [CrossRef]
+24.   Savari, G.F.; Krishnasamy, V.; Sathik, J.; Ali, Z.M.; Aleem, S.H.A. Internet of Things based real-time electric vehicle load forecasting
+      and charging station recommendation. Isa Trans. 2020, 97, 431–447. [CrossRef] [PubMed]
+25.   Huang, N.; He, Q.; Qi, J.; Hu, Q.; Wang, R.; Cai, G.; Yang, D. Multinodes interval electric vehicle day-ahead charging load
+      forecasting based on joint adversarial generation. Int. J. Electr. Power Energy Syst. 2022, 143, 108404. [CrossRef]
+26.   Zheng, Y.; Shao, Z.; Zhang, Y.; Jian, L. A systematic methodology for mid-and-long term electric vehicle charging load forecasting:
+      The case study of Shenzhen, China. Sustain. Cities Soc. 2020, 56, 102084. [CrossRef]
+27.   Zhang, W.; Liu, H.; Liu, Y.; Zhou, J.; Xu, T.; Xiong, H. Semi-Supervised City-Wide Parking Availability Prediction via Hierarchical
+      Recurrent Graph Neural Network. IEEE Trans. Knowl. Data Eng. 2020, 34, 3984–3996. [CrossRef]
+28.   Yang, S.; Ma, W.; Pi, X.; Qian, S. A deep learning approach to real-time parking occupancy prediction in transportation networks
+      incorporating multiple spatio-temporal data sources. Transp. Res. Part Emerg. Technol. 2019, 107, 248–265. [CrossRef]
+29.   Pantelidis, T.P.; Li, L.; Ma, T.Y.; Chow, J.Y.; Jabari, S.E.G. A node-charge graph-based online carshare rebalancing policy with
+      capacitated electric charging. Transp. Sci. 2021, 56, 654–676. [CrossRef]
+30.   Ma, T.Y.; Pantelidis, T.; Chow, J.Y. Optimal queueing-based rebalancing for one-way electric carsharing systems with stochastic
+      demand. arXiv 2021, arXiv:2106.02815.
+31.   Zhao, H.; Yang, H.; Wang, Y.; Wang, D.; Su, R. Attention Based Graph Bi-LSTM Networks for Traffic Forecasting. In Proceedings
+      of the 2020 IEEE 23rd International Conference on Intelligent Transportation Systems (ITSC), Rhodes, Greece, 20–23 September
+      2020 ; IEEE: Piscataway, NJ, USA, 2020; pp. 1–6.
+32.   Luo, X.; Li, D.; Zhang, S. Traffic flow prediction during the holidays based on DFT and SVR. J. Sensors 2019, 2019, 6461450.
+      [CrossRef]
+33.   Zhao, H.; Yang, H.; Wang, Y.; Su, R.; Wang, D. Domain-Adversarial-based Temporal Graph Convolutional Network for Traffic
+      Flow Prediction Problem. In Proceedings of the 2021 IEEE International Intelligent Transportation Systems Conference (ITSC),
+      Indianapolis, IN, USA, 19–22 September 2021 ; IEEE: Piscataway, NJ, USA, 2021; pp. 1365–1370.
+34.   Yang, H.; Wang, Y.; Zhao, H.; Zhu, J.; Wang, D. Real-time Traffic Incident Detection Using an Autoencoder Model. In Proceedings
+      of the 2020 IEEE 23rd International Conference on Intelligent Transportation Systems (ITSC), Rhodes, Greece, 20–23 September
+      2020; IEEE: Piscataway, NJ, USA , 2020; pp. 1–6.
+35.   Zhang, D.; Kabuka, M.R. Combining weather condition data to predict traffic flow: A GRU-based deep learning approach. Iet
+      Intell. Transp. Syst. 2018, 12, 578–585. [CrossRef]
+36.   Shi, X.; Chen, Z.; Wang, H.; Yeung, D.Y.; Wong, W.K.; Woo, W.C. Convolutional LSTM network: A machine learning approach for
+      precipitation nowcasting. Adv. Neural Inf. Process. Syst. 2015, 28, 802–810.
+37.   Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones, L.; Gomez, A.N.; Kaiser, Ł.; Polosukhin, I. Attention is all you need.
+      Adv. Neural Inf. Process. Syst. 2017, 30, 6000–6010.
+38.   Luo, R.; Zhang, Y.; Zhou, Y.; Chen, H.; Yang, L.; Yang, J.; Su, R. Deep Learning Approach for Long-Term Prediction of Electric
+      Vehicle (EV) Charging Station Availability. In Proceedings of the 2021 IEEE International Intelligent Transportation Systems
+      Conference (ITSC), Indianapolis, IN, USA, 19–22 September 2021; IEEE: Piscataway, NJ, USA , 2021; pp. 3334–3339.
+39.   Wagner, S.; Götzinger, M.; Neumann, D. Optimal location of charging stations in smart cities: A points of interest based approach.
+      In Proceedings of the 34th International Conference on Information Systems, Milan, Italy, 15–18 December 2013.
+40.   Koncar, I.; Bayram, I.S. A probabilistic methodology to quantify the impacts of cold weather on electric vehicle demand: A case
+      study in the UK. IEEE Access 2021, 9, 88205–88216. [CrossRef]
+41.   Liao, B.; Zhang, J.; Wu, C.; McIlwraith, D.; Chen, T.; Yang, S.; Guo, Y.; Wu, F. Deep sequence learning with auxiliary information
+      for traffic prediction. In Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data
+      Mining, London, UK, 19–23 August 2018; pp. 537–546.
+42.   Zhao, L.; Song, Y.; Zhang, C.; Liu, Y.; Wang, P.; Lin, T.; Deng, M.; Li, H. T-gcn: A temporal graph convolutional network for traffic
+      prediction. IEEE Trans. Intell. Transp. Syst. 2019, 21, 3848–3858. [CrossRef]
+43.   Quirós-Tortós, J.; Ochoa, L.F.; Lees, B. A statistical analysis of EV charging behavior in the UK. In Proceedings of the 2015
+      IEEE PES Innovative Smart Grid Technologies Latin America (ISGT LATAM), Montevideo, Uruguay, 5–7 October 2015; IEEE:
+      Piscataway, NJ, USA, 2015; pp. 445–449.
+Sensors 2023, 23, 1975                                                                                                            15 of 15
+
+
+
+
+44.   Ma, X.; Dai, Z.; He, Z.; Ma, J.; Wang, Y.; Wang, Y. Learning traffic as images: A deep convolutional neural network for large-scale
+      transportation network speed prediction. Sensors 2017, 17, 818. [CrossRef]
+45.   Ranjan, N.; Bhandari, S.; Zhao, H.P.; Kim, H.; Khan, P. City-wide traffic congestion prediction based on CNN, LSTM and transpose
+      CNN. IEEE Access 2020, 8, 81606–81620. [CrossRef]
+46.   Kipf, T.N.; Welling, M. Semi-supervised classification with graph convolutional networks. arXiv 2016, arXiv:1609.02907.
+47.   Tsai, Y.H.H.; Bai, S.; Yamada, M.; Morency, L.P.; Salakhutdinov, R. Transformer Dissection: A Unified Understanding of
+      Transformer’s Attention via the Lens of Kernel. arXiv 2019, arXiv:1908.11775.
+48.   Zhou, H.; Zhang, S.; Peng, J.; Zhang, S.; Li, J.; Xiong, H.; Zhang, W. Informer: Beyond efficient transformer for long sequence time
+      series forecasting. In Proceedings of the AAAI, Virtually, 2–9 February 2021.
+49.   Bilgic, B.; Chatnuntawech, I.; Fan, A.P.; Setsompop, K.; Cauley, S.F.; Wald, L.L.; Adalsteinsson, E. Fast image reconstruction with
+      L2-regularization. J. Magn. Reson. Imaging 2014, 40, 181–191. [CrossRef] [PubMed]
+50.   Xu, M.; Dai, W.; Liu, C.; Gao, X.; Lin, W.; Qi, G.J.; Xiong, H. Spatial-temporal transformer networks for traffic flow forecasting.
+      arXiv 2020, arXiv:2001.02908.
+
+Disclaimer/Publisher’s Note: The statements, opinions and data contained in all publications are solely those of the individual
+author(s) and contributor(s) and not of MDPI and/or the editor(s). MDPI and/or the editor(s) disclaim responsibility for any injury to
+people or property resulting from any ideas, methods, instructions or products referred to in the content.
+

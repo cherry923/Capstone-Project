@@ -1,0 +1,2 @@
+upper_algo,lower_algo,data_mode,total_grid_cost,total_grid_kwh,total_loss_kwh,total_peak_violation,total_soc_violation,share_abs_sum,avg_final_soc
+MILP,PI_SAC_FULL,synthetic,641050.1312006365,5839.775534272194,8474.324490383267,0.0,0.0,3739.5222387313843,0.22368134831388792

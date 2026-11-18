@@ -1,0 +1,96 @@
+{
+  "schema": "capstone-final-forecast-contract-v1",
+  "purpose": "Report-facing forecast source of truth for the final frontend comparison.",
+  "period": {
+    "start": "2022-01-01",
+    "end": "2022-02-28",
+    "days": 59
+  },
+  "source_paths": {
+    "pv_ev_metadata": "ai_module/artifacts/sharing_3arm/forecast_observation/multi_pv6000_shift048_pvfcst_tree_v5_evtfm_v2_peakaware_shapecal_p90.json",
+    "ev_metadata": "ai_module/artifacts/sharing_3arm/forecast_observation/multi_pv6000_shift048_evtfm_v2_peakaware_shapecal_p90.json",
+    "scenario_csv": "data/processed/ev/sharing_3arm/multi_pv6000_shift048_pvfcst_tree_v5_evtfm_v2_peakaware_shapecal_p90_evonly_volume_moderate_test.csv",
+    "frontend_comparison_json": "server/frontend/public/assets/operation-comparison/evonly_vmoderate_v2p90_pvess_multiseed.json"
+  },
+  "pv": {
+    "model": "tree_v5_hgb_absolute_error",
+    "model_family": "tree_based_regression",
+    "implementation": "HistGradientBoostingRegressor",
+    "target": "PV capacity factor, rescaled to station PV kWh",
+    "forecast_policy": "Strict day-ahead PV target: target-day PV actual is not an input. Target-day weather columns are treated as day-ahead weather forecast proxy.",
+    "features_include": [
+      "hour_sin",
+      "hour_cos",
+      "doy_sin",
+      "doy_cos",
+      "temperature",
+      "rain",
+      "humidity",
+      "snow",
+      "cloud",
+      "iljo",
+      "ilsa",
+      "cf_lag24",
+      "cf_lag168",
+      "cf_roll168"
+    ],
+    "jan_feb_2022": {
+      "hourly_wape": 12.007659258578366,
+      "daily_total_wape": 4.982481926316072,
+      "bias_pct": -1.3015844148659326,
+      "rmse": 58.585173923755896,
+      "scored_rows": 4248
+    }
+  },
+  "ev": {
+    "model": "evtfm_v2_peakaware_shapecal_p90",
+    "model_family": "EV Transformer v2",
+    "target": "Station-hour EV demand with p90 demand band",
+    "forecast_policy": "Predicts next-day hourly demand shape from past demand context and target-day calendar features; target-day actual demand is not an input.",
+    "jan_feb_2022": {
+      "hourly_wape_p50": 8.801471670039636,
+      "peak_hour_wape": 5.42,
+      "coverage_actual_le_p90_pct": 80.43785310734464,
+      "daily_peak_coverage_pct": 58.75706214689266,
+      "max_p90": 777.2648208650489
+    }
+  },
+  "frontend_metrics": [
+    {
+      "label": "PV 시간별 오차율",
+      "value": 12.01,
+      "unit": "%",
+      "note": "시간 단위 WAPE · 낮을수록 정확"
+    },
+    {
+      "label": "PV 일별 발전량 오차율",
+      "value": 4.98,
+      "unit": "%",
+      "note": "일별 총 발전량 WAPE"
+    },
+    {
+      "label": "EV 시간별 오차율",
+      "value": 8.8,
+      "unit": "%",
+      "note": "충전소별 시간 WAPE"
+    },
+    {
+      "label": "EV 피크 수요 오차율",
+      "value": 5.42,
+      "unit": "%",
+      "note": "피크 시간대 WAPE"
+    }
+  ],
+  "scenario_csv_summary": {
+    "rows": 4248,
+    "stations": [
+      "0",
+      "1",
+      "2"
+    ],
+    "hours": 24,
+    "demand_p90_is_at_least_forecast": true,
+    "pv_hourly_wape_recomputed": 12.007659258578366
+  },
+  "report_warning": "The live AI server PV endpoint can load Han's TFT-style package, but the final frontend/report comparison does not use that TFT package for PV. For the final report write: PV tree-based regression model, EV Transformer v2 demand forecast."
+}

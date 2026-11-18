@@ -1,0 +1,99 @@
+{
+  "model_id": "evcs_api_model_v4_share_milp_shield",
+  "run_name": "evcs_api_model_v4_share_milp_shield",
+  "created_at": "2026-05-24T12:10:00",
+  "purpose": "Production candidate for visible P2P energy sharing: SoftPeakSlackMILP upper planner emits a non-zero inter-station share plan, DefaultLowerAgent is overlaid with C6 forecast-aware safety shield. This is the share-aware successor to v3 fallback_shield, not a learned shared SAC policy.",
+  "data": {
+    "train_data_mode": "n/a (planner + rule + shield)",
+    "real_data_path": null,
+    "synthetic_data": false,
+    "evaluation_note": "Endpoint-level smoke/e2e must check total_share_abs_kwh > 0 plus peak/soc validity. Learned Shared PI-SAC remains a research follow-up."
+  },
+  "algorithm": {
+    "upper_algo": "SOFT_PEAK_MILP",
+    "lower_algo": "DEFAULT",
+    "upper_for_training": "SOFT_PEAK_MILP",
+    "independent_lower_agents": true,
+    "uses_safety_shield": true
+  },
+  "model_files": {
+    "upper_model": {
+      "role": "upper",
+      "algo": "SOFT_PEAK_MILP",
+      "type": "stateless",
+      "path": null,
+      "description": "SoftPeakSlackMILPPlanner: lexicographic plan that first minimizes peak-limit slack, then grid+transfer cost. Reads regional station_config/share_abs_max from day_data when present.",
+      "params": {
+        "slack_epsilon": 1.0,
+        "peak_slack_unit_penalty_stage2": 0.0
+      }
+    },
+    "lower_models": [
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 0,
+        "station_idx": 0,
+        "type": "stateless",
+        "path": null,
+        "description": "DefaultLowerAgent: zero action, then overridden by C6 forecast-aware safety shield."
+      },
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 1,
+        "station_idx": 1,
+        "type": "stateless",
+        "path": null
+      },
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 2,
+        "station_idx": 2,
+        "type": "stateless",
+        "path": null
+      }
+    ]
+  },
+  "environment": {
+    "n_station": 3,
+    "horizon": 24,
+    "station_config": {
+      "pv_capacity_kwh": 100.0,
+      "ess_capacity_kwh": 998.0,
+      "ess_max_ratio": 0.1,
+      "soc_min": 0.1,
+      "soc_max": 0.9,
+      "vmax_kwh": 1200.0,
+      "peak_limit_kwh": 450.0
+    },
+    "system_config": {
+      "n_station": 3,
+      "horizon": 24,
+      "tou_low": 84.5,
+      "tou_mid": 111.9,
+      "tou_high": 174.0,
+      "share_abs_max_kwh": 250.0,
+      "share_transfer_cost": 0.03
+    }
+  },
+  "shield_config": {
+    "peak_limit_kwh": 450.0,
+    "soc_min": 0.1,
+    "soc_max": 0.9,
+    "soc_low_reserve_threshold": 0.3,
+    "ess_max_ratio_per_step": 0.1,
+    "ess_capacity_kwh": 998.0,
+    "future_horizon_hours": 6
+  },
+  "deployment_notes": {
+    "scenario_override": "regional_virtual_hub injects a 3-hub physical spec through day_data, so planner and shield use peak_limit=850, ESS=16000kWh per hub, and share_abs_max=250 for aggregate Jeju demand.",
+    "research_boundary": "This candidate demonstrates share-aware dispatch in production responses. It is not the final SAC-standard shared policy; Shared PI-SAC must still be trained/evaluated separately."
+  },
+  "api_output_schema_additions": {
+    "dispatch.summary.total_share_abs_kwh": "sum(abs(share_energy_kwh)) over all rows",
+    "dispatch.summary.share_nonzero_rows": "rows with non-zero share_energy_kwh",
+    "dispatch.commands[].share_energy_kwh": "positive means station receives energy; negative means station exports energy"
+  }
+}

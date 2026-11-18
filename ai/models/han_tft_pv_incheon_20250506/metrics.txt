@@ -1,0 +1,5 @@
+mae_mwh=1.322919
+rmse_mwh=2.108677
+mape_percent=14904.514884
+daytime_mae_mwh=1.938784
+daytime_rmse_mwh=2.768791

@@ -1,0 +1,155 @@
+{
+  "model_id": "evcs_api_model_v1_synthetic_MILP_PI_SAC_FULL",
+  "run_name": "evcs_api_model_v1",
+  "created_at": "2026-05-05T10:22:43",
+  "purpose": "FastAPI 서버에서 단일 EVCS 운영 모델을 로드하기 위한 모델 패키지",
+  "data": {
+    "train_data_mode": "synthetic",
+    "real_data_path": null,
+    "synthetic_data": true
+  },
+  "algorithm": {
+    "upper_algo": "MILP",
+    "lower_algo": "PI_SAC_FULL",
+    "upper_for_training": "MILP",
+    "independent_lower_agents": true
+  },
+  "model_files": {
+    "upper_model": {
+      "role": "upper",
+      "algo": "MILP",
+      "type": "stateless",
+      "path": null,
+      "description": "MILP 최적화 기반 share plan 생성"
+    },
+    "lower_models": [
+      {
+        "role": "lower",
+        "algo": "PI_SAC_FULL",
+        "index": 0,
+        "station_idx": 0,
+        "type": "full_pi_sac",
+        "path": "lower_PI_SAC_FULL_0.pt"
+      },
+      {
+        "role": "lower",
+        "algo": "PI_SAC_FULL",
+        "index": 1,
+        "station_idx": 1,
+        "type": "full_pi_sac",
+        "path": "lower_PI_SAC_FULL_1.pt"
+      },
+      {
+        "role": "lower",
+        "algo": "PI_SAC_FULL",
+        "index": 2,
+        "station_idx": 2,
+        "type": "full_pi_sac",
+        "path": "lower_PI_SAC_FULL_2.pt"
+      }
+    ]
+  },
+  "environment": {
+    "n_station": 3,
+    "horizon": 24,
+    "station_config": {
+      "pv_capacity_kwh": 100.0,
+      "ess_capacity_kwh": 998.0,
+      "ess_max_ratio": 0.1,
+      "soc_min": 0.1,
+      "soc_max": 0.9,
+      "vmax_kwh": 1200.0,
+      "peak_limit_kwh": 450.0
+    },
+    "system_config": {
+      "n_station": 3,
+      "horizon": 24,
+      "tou_low": 84.5,
+      "tou_mid": 111.9,
+      "tou_high": 174.0,
+      "share_abs_max_kwh": 120.0,
+      "share_transfer_cost": 0.03
+    }
+  },
+  "training_params": {
+    "sac_params": {
+      "learning_rate": 0.0001,
+      "buffer_size": 10000,
+      "batch_size": 256,
+      "gamma": 0.99,
+      "tau": 0.05,
+      "train_freq": 1,
+      "gradient_steps": 1,
+      "total_timesteps_lower": 10000,
+      "total_timesteps_upper": 10000,
+      "verbose": 1
+    },
+    "pi_params": {
+      "lambda_init": [
+        50.0,
+        50.0
+      ],
+      "kp": 0.4,
+      "ki": 0.005,
+      "i_max": 30.0,
+      "lambda_decay": 0.999,
+      "lambda_max": [
+        3000.0,
+        3000.0
+      ],
+      "epsilon": [
+        0.0,
+        0.0
+      ]
+    },
+    "reward_grid_weight": 1.0,
+    "reward_self_weight": 0.3,
+    "reward_loss_weight": 0.2
+  },
+  "evaluation": {
+    "n_eval_days": 10,
+    "bad_prediction_eval": false,
+    "result_file": "evaluation_result.csv",
+    "summary_file": "evaluation_summary.csv"
+  },
+  "api_input_schema": {
+    "description": "FastAPI 서버는 DB에서 아래 형태의 데이터를 날짜 기준으로 조회해야 함",
+    "required_rows": "n_station * horizon",
+    "required_columns": [
+      "date",
+      "station",
+      "hour",
+      "pv_forecast",
+      "demand_forecast",
+      "pv_actual",
+      "demand_actual",
+      "tou"
+    ],
+    "optional_inputs": [
+      "init_soc"
+    ]
+  },
+  "api_output_schema": {
+    "description": "시간별/충전소별 운영 결과",
+    "columns": [
+      "date",
+      "t",
+      "station",
+      "soc_before",
+      "soc_after",
+      "pv_actual",
+      "demand_actual",
+      "tou",
+      "share",
+      "a_ess",
+      "a_pv",
+      "grid_total_kwh",
+      "grid_cost",
+      "self_supply_kwh",
+      "loss_kwh",
+      "peak_violation",
+      "soc_violation",
+      "objective_reward"
+    ]
+  }
+}

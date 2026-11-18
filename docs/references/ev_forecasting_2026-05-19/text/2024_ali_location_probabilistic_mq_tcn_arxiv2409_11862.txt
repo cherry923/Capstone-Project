@@ -1,0 +1,710 @@
+                                              Location based Probabilistic Load Forecasting of
+                                              EV Charging Sites: Deep Transfer Learning with
+                                              Multi-Quantile Temporal Convolutional Network
+                                                          Mohammad Wazed Ali                                      Asif bin Mustafa                          Md. Aukerul Moin Shuvo                                Bernhard Sick
+                                         Intelligent Embedded Systems (IES), University of Kassel, School of CIT, Technical University of Munich, Dept. of Computer Science and Engineering, Intelligent Embedded Systems (IES), University of Kassel,
+                                                            Kassel, Germany                                       Munich, Germany                 Rajshahi University of Engg. & Technology,                    Kassel, Germany
+                                                                                                                                                             Rajshahi, Bangladesh
+
+
+
+
+arXiv:2409.11862v1 [cs.LG] 18 Sep 2024
+                                            Abstract—Electrification of vehicles is a potential way of reduc-
+                                         ing fossil fuel usage and thus lessening environmental pollution.
+                                         Electric Vehicles (EVs) of various types for different transport
+                                         modes (including air, water, and land) are evolving. Moreover,
+                                         different EV user groups (commuters, commercial or domestic
+                                         users, drivers) may use different charging infrastructures (public,
+                                         private, home, and workplace) at various times. Therefore, usage
+                                         patterns and energy demand are very stochastic. Characterizing
+                                         and forecasting the charging demand of these diverse EV usage
+                                         profiles is essential in preventing power outages. Previously
+                                         developed data-driven load models are limited to specific use
+                                         cases and locations. None of these models are simultaneously
+                                         adaptive enough to transfer knowledge of day-ahead forecasting
+                                         among EV charging sites of diverse locations, trained with limited
+                                         data, and cost-effective. This article presents a location-based
+                                         load forecasting of EV charging sites using a deep Multi-Quantile
+                                         Temporal Convolutional Network (MQ-TCN) to overcome the
+                                         limitations of earlier models. We conducted our experiments on
+                                         data from four charging sites, namely Caltech, JPL, Office-1,
+                                         and NREL, which have diverse EV user types like students,                                                                 Label Format: [Data Size-Lookback Time-Forecast Horizon]
+                                                                                                                                                                                                                              MQ-TCN (Office)
+                                                                                                                                                                                                                              XGBoost (Office)
+                                                                                                                                                                   Data Size: F (All Data), M (Months), W (Weeks)
+                                         full-time and part-time employees, random visitors, etc. With a                                                           Lookback Time, Forecast Horizon: In Hour(s)
+                                                                                                                                                                                                                               MQ-TCN (NREL)
+                                                                                                                                                                                                                              XGBoost (NREL)
+                                         Prediction Interval Coverage Probability (PICP) score of 93.62%,
+                                         our proposed deep MQ-TCN model exhibited a remarkable                                                    Fig. 1: Load Forecasting at JPL and NREL Electric Vehicle
+                                         28.93% improvement over the XGBoost model for a day-ahead                                                Charging Sites using Deep MQ-TCN model with Inductive
+                                         load forecasting at the JPL charging site. By transferring
+                                         knowledge with the inductive Transfer Learning (TL) approach,
+                                                                                                                                                  Transfer Learning.
+                                         the MQ-TCN model achieved a 96.88% PICP score for the load
+                                         forecasting task at the NRELsite using only two weeks of data.
+                                            Index Terms—Electric Vehicle, Load Forecasting, Charging                                              grid instability [4]. In addition, integrated renewable energy
+                                         Sites, Deep Transfer Learning, TCN, Quantile Regression.
+                                                                                                                                                  sources depend highly on weather, location, and other climate-
+                                                                                                                                                  related factors [5].
+                                                                           I. I NTRODUCTION                                                          Therefore, stakeholders like EV charging station operators,
+                                            To meet the Paris Agreement demand adopted in 2015,                                                   energy traders, and energy producers need to know the ag-
+                                         electric vehicles (EVs), combined with a renewable energy                                                gregated energy demand of a charging site in advance at a
+                                         mix, are a great candidate to replace fossil fuel-based internal                                         nearby time or for special occasions such as public holidays
+                                         combustion engines and reduce global warming, greenhouse                                                 [6]. Understanding EV users’ aggregated energy demand at
+                                         gas emissions, and climate change [1][2]. In recent years,                                               nearby time points (1-hour, 4-hour, 12-hour, 24-hour forecast
+                                         electric car sales have experienced exponential growth, with                                             horizon) of a particular charging site will give stakeholders
+                                         around 14 million new electric cars sold alone in 2023 and                                               a significant advantage in incentivizing pricing strategies or
+                                         expected to reach 17 million in 2024 [3]. However, this                                                  charging EVs intelligently [7].
+                                         tremendous eagerness to transform the transport sector with                                                 Many past research works based on statistical or machine
+                                         EVs and increase the total share of the grid’s renewable energy                                          learning-based specialized load models failed due to the lack
+                                         mix brings many unique challenges, such as power outages                                                 of adaptability and inability to model complex interactions
+                                         due to excessive energy demand. Very often, there is no fixed                                            among heterogeneous temporal features and irregular energy
+                                         charging behavior, and any energy demand pattern exists in                                               usage patterns [8][9]. Some models are very sensitive to
+                                         advance for EVs, which may lead to uncontrolled charging and                                             outliers [10], and some can not handle large datasets well
+[11][12]. In recent years, researchers have started to use           • We are the first to propose utilizing the inductive TL
+deep learning (DL) models. However, much of this DL-based              approach in our knowledge using a multi-step quantile
+research was completed earlier with a large amount of data             regression method with deep learning architecture like
+and high computational resources [13], point forecasts were            multivariate TCN to forecast day-ahead load of geo-
+performed only without uncertainty estimates, and knowledge            graphically separated EV charging sites under extremely
+transfer did not occur [14][15]. In addition, many of these            limited computational resources (data, computing power,
+models consider only numerical and temporal features and               etc.) for the e-mobility domain.
+ignore informative high cardinal categorical features [16]. Re-      • Without the TL approach, our proposed MQ-TCN
+cently, some research ideas have been discussed and analyzed           architecture achieved an impressive Prediction Interval
+to overcome the limitations of earlier models without in-depth         Coverage Probability (PICP) score of 93.62% as shown in
+experimental evaluations [5][17]. In our research, we not only         Figure 1, and this resulted in an improvement of around
+analyzed but also focused on in-depth experimental evaluation          28.93% for one day-ahead of load forecasting than usual
+of our ideas to overcome the following challenges:                     XGBoost model at the JPL site in the same settings.
+Firstly, to collect an abundant amount of data in the electromo-     • With the inductive TL approach, with the pretrained
+bility (e-mobility) domain is not easy as it contains sensitive        MQ-TCN model, using only 2 weeks of data, it reached
+personal information and due to its economic value [18].               a PICP score of 96.88% as illustrated in Figure 1 for
+Secondly, training an individual DL-based load model from              hourly forecasting at NREL site. This resulted in an
+scratch for geographically separated charging sites is costly          improvement of 18.23% compared to the XGBoost model
+and time-consuming. Thirdly, building an efficient DL model            trained on 6 months of data without TL. In similar TL
+with abundant data requires massive computation power and              settings at the Office-1 site, MQ-TCN achieved 91.04%
+thus generates high temperatures, which oppose the objectives          for 4 hours-ahead forecasting and 87.30% for one day-
+of the Paris Agreement [19].                                           ahead forecasting task using only1 month of data.
+Therefore, this research considers inductive Transfer Learning       • To capture the uncertainty of the model’s generated
+(TL) from a knowledge-transferring perspective among geo-              load forecasts of EV charging sites, our utilized PICP
+graphically separated charging sites and ensures self-adaptive         and Winkler Score (WS) metrics efficiently estimate
+properties in the models. Rather than developing DL mod-               uncertainties jointly by quantifying accurate forecasting
+els for point forecasting, we consider a quantile regression-          within efficient prediction intervals.
+oriented probabilistic approach to capture uncertainty in com-       • By investigating the impact of data size, lookback
+bination with Temporal Convolutional Network (TCN) [20].               period, and forecasting horizon time via experimental
+In this research, we proposed Multi-Quantile TCN (MQ-                  evaluation. It has been observed that transferring
+TCN), an architecture described briefly in Section II novel            knowledge with an inductive TL approach significantly
+in the e-mobility domain for load forecasting of charging              reduces learnable parameter size without losing
+sites incorporating quantile regression techniques and TCN             forecasting accuracy. While applying the inductive TL
+capabilities. To evaluate MQ-TCN architecture using real-              approach from JPL to the Office-1 site with the same
+world datasets for load forecasting tasks, we are motivated            settings and using the proposed MQ-TCN model, a 72%
+to explore the following research questions in this research:          reduction in learnable parameter size is observed for data
+                                                                       sizes of 2 weeks compared to 1 month. However, this
+  1) How to develop a multivariate multi-step load forecast-
+                                                                       reduction only compensates for 3.4% of the PICP score.
+     ing model of charging stations using a deep MQ-TCN
+                                                                       Moreover, while varying the lookback period and the
+     for the e-mobility domain?
+                                                                       length of the forecast horizon, no explicit observation
+  2) How can we effectively transfer day-ahead load fore-
+                                                                       has been found related to the forecasting accuracy.
+     casting knowledge using a deep inductive TL approach
+     among geographically separated EV charging sites with
+     low computational resources?                                     In this article, Section II discusses related research in e-
+  3) How can we handle uncertainty?                                mobility. Section III formulates problem definition, and Sec-
+  4) How does the performance of day-ahead load forecasting        tion IV gives an overview of the proposed MQ-TCN model
+     in TL settings change with lookback period, forecast          and discusses TL settings applied in this research. Section
+     horizon, and training data size?                              V presents details of the experimental settings, evaluation
+                                                                   measures with results, and analysis. Section VI concludes this
+   This research used historical charging session data from        research article and describes future work.
+four real-world EV charging sites: Caltech, JPL, Office-1,
+and NREL [21]. Here, the Caltech, JPL, and Office-1 data is                            II. R ELATED W ORK
+obtained from the primary dataset, ’ ACN’ [22]. Experimental         E-mobility has become a prominent field in recent years,
+evaluation of these datasets using proposed MQ-TCN archi-          and forecasting the energy demand of charging sites has
+tecture in comparison to the XGBoost [23] and Deep Auto-           become an essential area of research. In this paper [14],
+Regressive recurrent networks (DeepAR) [24] models leads to        EV charging demand forecasting models were developed for
+the following contributions:                                       a day-ahead horizon and 15-minute resolution. The models
+incorporated calendar and weather data, and the LSTM model                 an objective function ftd (.) needs to be learned with limited
+was used. The authors of [25] evaluated the use of deep neural             training samples {xitd , yitd } in target domain. In our research,
+networks (DNNs) and tree-based machine learning models for                 both source and target tasks (Tsdm , Ttdm ) in TL settings
+forecasting energy demand at public EV charging stations                   are represented as multi-step load forecasting with the deep
+and conclude that tree-based models outperform DNNs in                     neural network as non-linear objective function (ftd (.)) to
+accuracy and error metrics. The authors of [25] also studied               transfer knowledge from source EV sites having abundant
+how traffic, crowd distribution, weather, and charging station             resources (data, computing power etc.) to resource constraint
+distribution affect charging demand [26]. In the deep learning             EV charging sites.
+model family, transformers perform better in e-mobility en-
+ergy demand forecasting [13]. Probabilistic forecasting is an                                    IV. M ETHODOLOGY
+exciting research field that predicts the charging demand for                In this section, we define the related terms, methods and
+e-mobility. Machine Theory of Mind Based Quantile Forecast                 then describe our proposed architecture.
+Network (MBQFN) framework has proven to perform better
+than existing DeepAR, ARX-GARCH, DLQR, Persistence,                        A. Multivariate MQ-TCN for Multi-Step Forecasting
+and T-CKDE [27]. In an investigation of [28], Bayesian                        TCN is a variant of CNNs that uses parallel computations
+deep learning and quantile regression methods enhanced load                consisting of three main components: causal convolution,
+forecasting accuracy in EV charging stations. This approach                dilated convolution, and a residual connection. One of the most
+outperforms traditional methods in dealing with uncertainties.             important features of this system is its ability to process inputs
+Numerous research were completed earlier to apply to elec-                 of any length and produce outputs of the same length. This
+tricity load forecasting using convolutional neural networks               is achieved by using a 1D fully convolutional network (FCN)
+(CNNs) [29], [30], [31]. Recently, some research has been                  structure where each hidden layer matches the input layer in
+conducted on the transfer of knowledge in e-mobility, where                length. Also, zero-padding is added to maintain consistency
+data is limited in the target domain. The results indicated that           across layers. Causal convolutions ensure that the model only
+using CNN-BiLSTM has improved accuracy in predicting EV                    focuses on historical data to prevent data leakage in the future
+charging demand and network voltage profiles while reducing                [34]. Traditional causal convolutions have a limited reach that
+computational requirements for power grid operations, but it               increases linearly with network depth, which is insufficient for
+is unable to handle uncertainty [15]. In [32], XGBoost was                 long sequences or historical data. To address this limitation,
+used alongside other algorithms on the ACN dataset for both                TCN uses dilated causal convolutions that skip inputs at
+classification and regression tasks with good scores at AUC, F1            defined intervals, thus significantly expanding the receptive
+Score, R², and RMSE metrics. It lacked adaptability and could              field’s size [35].
+not handle uncertainty. In [33], XGBoost predicted single-step                For a sequence input x1 , x2 , ...., xT ∈ R and a filter ff ilter :
+charging demand forecasting at public stations.                            {0, 1, ..., k −1}, the dilated convolution function G on element
+                                                                           s of the sequence is expressed as:
+       III. P ROBLEM DEFINITION AND FORMULATION
+                                                                                                                k−1
+   To formulate multi-step load forecasting task formally, let’s
+                                                                                                                X
+                                                                               G(s) = (x ∗dl ff ilter )(s) =          ff ilter (i) · xs−dl ·i   (1)
+denote a heterogeneous multivariate time series dataset of                                                      i=0
+d(d ≥ 1) number of non-predictive variables with length T
+                T                        T                                 where k denotes the dimension of the filter, dl is the dilation
+as X = {xt }t=1 = {x1 , x2 , ...., xT } ∈ RT ×d and target
+                       T                        T                          factor which determines the interval at which the input values
+variable as Y = {yt }t=1 = {y1 , y2 , ...., yT } ∈ RT ×1 . Here,
+         d                                                                 are sampled, ∗dl represents the dilated convolution operator,
+xt ∈ R (1 ≤ t ≤ T ) is a vector with d non-predictive variable
+                                                                           and xs−dl ·i indicates a backward step through the sequence
+at time step t whereas yt ∈ R (1 ≤ t ≤ T ) symbolizes the
+                                                                           indexed from s.
+target variable at the same time step t. Based on the task
+                                                                              The receptive capacity of a TCN is inherently linked to
+definition and forecasting horizon δ (δ ≥ 1), an estimate of
+                                                                           the network’s depth, represented by n, and the dilation factor,
+the target variable is the output of the load prediction model
+                              T +δ                                         denoted as dl . It is crucial to stabilize the TCN, particularly
+after T + δ denotes as {ŷt }t=T +1 = {ŷT +1 , ŷT +2 , ...., ŷT +δ }.
+                                                                           when deepening it, to overcome common issues of deep
+In this article, we consider a deep neural network variant as
+                                                                           networks such as performance degradation and vanishing gra-
+a non-linear mapping function F (•) to forecast future value
+      T +δ                                                                 dients. In this solution, a residual module is used, leveraging
+{ŷt }t=T +1 with δ time steps ahead from non-predictive input
+      T                                T                                   residual connections to enhance and simplify the network
+{xt }t=1 , and target     series {yt }t=1 and   represent as             training process [36]. Such a module and its connection are
+      T +δ                        T         T
+{ŷt }t=T +1 = F (•) = F {xt }t=1 , {yt }t=1 .                             illustrated in Figures 2b and 2c. To approximate a given
+   This research article also focuses on transferring knowledge            function H(x), we can reformulate it using another function
+of load forecasting tasks among EV charging sites with similar             G(x) defined as G(x) := H(x) − x. This allows us to
+characteristics using the deep TL approach. To transfer knowl-             recast the original learning target as G(x) + x, based on the
+                                      m=M
+edge from source (S) tasks {Tsdm }m=1 in where M ∈ N +                     concept of residual connections. This adjustment simplifies
+and source domain {Dsm , Tsdm } to a target (T) task Ttdm ,                the optimization process compared to optimizing the unaltered
+                                                                  Output
+                                                                                       Dropout              +
+                                                                                                                        Convolutional Filter           +
+                                                                                        ReLU                            Identity Map (or 1 × 1 conv)
+
+                                                                                     WeightNorm
+                                                                  Hidden
+                                                                                 Dialated Casual Conv   1 × 1 conv
+                                                                                                        (optional)
+                                                                                       Dropout
+                                                                  Hidden
+                                                                                        ReLU
+
+                                                                                     WeightNorm
+
+                                                                                 Dialated Casual Conv
+                                                                 Input
+
+
+                               (a)                                                               (b)                                           (c)
+
+
+Fig. 2: Components of a TCN (a) A dilated causal convolution applied convolutional filters with dilation factors dl = 1, 2, and
+4, and a filter size of k = 3; (b) In a TCN residual block, if the input and output have different sizes, a 1 × 1 convolution is
+included to adjust for the difference; (c) Illustration of Residual Connection within a TCN [34].
+
+
+function H(x) directly. The outcomes are then routed back as                     which is designed to optimally penalize the forecast errors for
+inputs to the block, producing an output o as illustrated by:                    each quantile level q as follows:
+
+                      o = Activation(x + G(x))                             (2)      LP B (q, yT +i , ŷTq +i ) =
+                                                                                              (
+                                                                                                (1 − q) · (yT +i − ŷTq +i ) if ŷTq +i ≥ yT +i ,
+     This mechanism permits the network layers to adjust the                                                                                               (3)
+identity mapping incrementally rather than relearning the                                       q · (yT +i − ŷTq +i )       if ŷTq +i < yT +i ,
+entire transformation from scratch. This is substantially bene-                  for each forecast horizon i = 1, 2, . . . , δ and correspond-
+ficial for deep neural networks’ depth-wise learning capacity.                   ing quantile level q. This function ensures that the quantile
+     Instead of single-point forecasting, we propose a TCN                       forecasts are not only centered but also capture the inherent
+architecture tailored for quantile regression [37] in e-mobility                 variability of the future values, providing a comprehensive
+demand forecasting in Figure 3. The TCN processes a se-                          probabilistic forecast which is crucial for decision-making
+quence of inputs xT −p , xT −p+1 , . . . , xT , where p denotes the              in dynamic and demand-responsive environments such as e-
+number of past observations and d represents the full length                     mobility services.
+of the input vector. The network’s output serves as an inter-
+mediate forecast value, which is then input into subsequent                      B. Transfer Forecasting Knowledge with Inductive TL
+fully connected (FC) layers. Then, each FC layer in the model                        TL transfers knowledge from one EV load forecasting
+specializes in predicting a distinct quantile of the forecast                    model trained on abundant data to forecast load on geograph-
+distribution. Specifically, the output for the first quantile is                 ically separated charging sites with limited data. Based on
+                   0           0           0
+given by ŷTq +1 , ŷTq +2 , . . . , ŷTq +δ ; for the second quantile by        past studies and scientific literature [38], we define TL and its
+    1         1                 1
+ŷTq +1 , ŷTq +2 , . . . , ŷTq +δ ; and so on, up to the n-th quantile. The    related terms as follows:
+                                                                                     If xdt is a sample data point at time t with d non-
+                                                                                 predictive features, a domain D can be characterized by
+                                                                                 (i) feature space, χd+1 (including non-predictive and target
+                                                                                 feature space) and (ii) marginal probability distribution P (X)
+                                                                                 with X = {x | xi ∈ χ, i = 1......, d}. Domain D in TL can
+                                                                                 be denoted as D = {χ, P (X)} . A task, T , can be defined
+                                                                                 via label space Y and objective function f (.) can be denoted
+                                                                                  as, T = {Y, f (.)} in where f (.) can be only learned from
+                                                                                  training data ({xi , yi } | xi ∈ X and yi ∈ Y ). A generic
+                                                                                  definition of inductive TL is as follows:
+                                                                                     Definition (Inductive Transfer Learning): Given a source
+                                                                                  domain Dsd and a learning task Tsd , and a target domain
+                                                                                  Dtd and learning task Ttd , the goal of inductive TL aims to
+                                                                                  assist improve the learning of the target predictive function
+                                                                                  ftd (.) in Dtd using the knowledge in Dsd and Tsd , where Tsd
+         Fig. 3: Multi-Quantile Forecasting using TCN.                           ̸= Ttd .
+                                                                                     In accordance with the above formal definition, in our
+TCN model is trained using the Pinball Loss function LP B ,                      research experiment, our target load forecasting function is
+a non-linear deep learning model as described in the previous       collection and features than other sites. Figures 4a, 4b, and 4c
+section under the name of MQ-TCN. The source and target
+domain feature spaces can be denoted as χsd ∈ R(T ×dsd ) and                     TABLE I: E-Mobility Dataset Statistics
+χtd ∈ R(T ×dtd ) , respectively, where (T × d) is the optimal
+                                                                     Charging      # of              # of        Duration   # of
+length of the input sequence values of individual domains,             Sites Charging Stations Charging Sessions (Months) Features
+known as the lookback window used to train MQ-TCN model.
+                                                                      Caltech         54              31424          40      13
+The marginal probability distributions of the source and target
+                                                                       JPL            50              33638          35      13
+variables (future energy consumption) are different: Psd (X) ̸=
+                                                                      Office-1         8               1683          30      13
+Ptd (Y ). Both the source and target domain data in our research      NREL            141             40979          59      16
+come from geographically separated EV charging sites and are
+not identical (Dsd ̸= Dtd ) in terms of data distribution. The
+energy consumption profile of the EV user often varies from         provide a comprehensive view of energy consumption trends
+area to area, even within the same country, due to different        at Caltech, JPL, Office-1, and NREL locations. In Figure 4a,
+lifestyles, economic status, and other factors. The source (Ysd )   Caltech shows peak energy usage during daytime hours, JPL
+and target (Ytd ) label spaces in the case of energy forecasting    in the early afternoon, the Office-1 at midday, and NREL
+model depend on the length of the forecast horizons. As             unusually peaks in the early morning. Figure 4b illustrates
+the predictive function f (.) is responsible for transferring       varying holiday energy consumption with notable spikes at
+knowledge in TL settings, but f (.) is learned by providing         NREL during Susan B. Anthony Day and Martin Luther King
+training data from geographically separated EV charging sites.      Jr. Day, while JPL peaks on Veterans Day. On the other
+Therefore, source and target forecasting functions are also         hand, the Office-1 consumes very little energy during holidays.
+not equal: fsd (.) ̸= ftd (.). In our research, we investigate      Lastly, Figure 4c displays annual energy usage, highlighting
+both homogeneous TL ( χsd = χtd ; Tsd (Y ) = Ttd (Y )) and          NREL’s significant variability and the Office-1’s consistent
+heterogeneous TL ( χsd ̸= χtd ; Tsd (Y ) ̸= Ttd (Y )) in where      consumption across years, allowing for detailed analysis of
+source and target features space can be both (same or different)    temporal energy patterns across sites.
+and also for a constant source label space, forecasting horizons    We prepared our datasets by addressing missing values where
+are variable (both same and different) for target task (Ttd ) in    feasible to maintain consistent features across all locations.
+various experimental settings.                                      Anomalies were removed using Facebook Prophet [39], and
+   We have applied a ‘head replacement’ approach in our             domain knowledge. Hourly data samples were standardized for
+inductive TL experiments, as our TL based experiments are           uniformity. We utilized sine-cosine transformations to capture
+homogeneous and heterogeneous. In heterogeneous TL ex-              the cyclic nature of temporal data. Numerical features were
+periments, the label spaces of the source and target domains        normalized using a Min-Max scaler method. Using an encoder-
+are different. However, this approach enables flexibility to        based dimensionality reduction technique, we translated a
+make experiments with target domain (geographically sepa-           high-dimensional categorical feature such as ‘StationID’ from
+rated charging infrastructure) load forecasting tasks of various    186 unique values to only 30 unique values of lower di-
+time horizons (Ttd ∈ R1,4,24 ).                                     mension. For low-dimensional categorical features, we applied
+                                                                    different encoding strategies based on the number of unique
+       V. E XPERIMENTAL S ETUP AND E VALUATION                      categories: for features with 2 to 5 unique values, we used
+  This section give details about datasets, experimental setup      one-hot encoding. For features with 5 to 10 unique values,
+and evaluation measure used in our research.                        we used embedding layers in our DNNs to improve model
+                                                                    performance. To avoid disruptions caused by the COVID-19
+A. Data                                                             pandemic, we curated the data to include records only until
+   Table I provides detailed statistics about ACN and NREL          March 2020.
+datasets. ACN contains historical EV charging session in-
+formation from the California Institute of Technology (Cal-         B. Evaluation Metrics
+tech), Jet Propulsion Laboratory (JPL), and a small office            In our experiments, we evaluated model performance using
+workplace (Office-1) [22]. On the other hand, the NREL              several evaluation metrics: PICP, Pinball Loss, WS Score,
+dataset represented historical charging session data of the         and Normalized Deviation (ND). Pinball Loss is described in
+National Renewable Energy Laboratory (NREL). The table              Equation 3. PICP, WS, and ND are defined as:
+shows Caltech has 54 charging stations with 13 different data
+                                                                                                         N
+features. JPL has slightly fewer stations than Caltech but more                                    1 X
+charging sessions. With only 8 stations, the Office-1 location                              PICP =       εi                       (4)
+                                                                                                   N i=1
+has significantly fewer sessions than the other locations. Com-
+pared to the other three charging locations, NREL has the           where the variable εi is defined as follows:
+most stations, 141, and the highest number of sessions over                         (
+the most extended period of approximately 59 months [21].                             1, if yT +i ∈ [LT +i,q , UT +i,q ],
+                                                                               εi =                                               (5)
+This site includes 16 data features, indicating a broader data                        0, if yT +i ∈/ [LT +i,q , UT +i,q ].
+                                                                                   (b) Location-wise Holiday’s Energy Consumption
+           (a) Location-wise Hourly Energy Consumption (KWh).                      (KWh).
+
+
+
+
+                                 (c) Location-wise Annual Energy Consumption (KWh) Boxplots.
+                           Fig. 4: Energy Consumption Trends and Comparisons for All Locations
+
+               TABLE II: Forecasting Performance Comparison without Transfer Learning (Source Domain).
+                                Caltech                                                        JPL
+                 Model   PICP PinBall     WS       ND      Lookback Forecast    Model   PICP PinBall   WS       ND
+                               Loss                          Time   Horizon                   Loss
+                                                                               MQ-TCN 93.62    2.28    21.55   0.2226
+               MQ-TCN 80.19     3.38      38.90   0.3523     168       24      XGBoost 64.69   1.82    19.58   0.1770
+                                                                               DeepAR   n/a     n/a     n/a    0.1770
+               MQ-TCN 84.93     3.47      37.04   0.3602
+               XGBoost 78.96    3.13      33.41   0.3254     168       48      MQ-TCN 75.50    2.35    25.04   0.2266
+               DeepAR   n/a      n/a       n/a    0.2955
+               MQ-TCN 82.79     3.39      38.94   0.3649     336       24      MQ-TCN 87.85    2.64    20.93   0.2573
+               MQ-TCN 80.90     3.04      32.37   0.3261     336       48      MQ-TCN 88.32    1.89    18.16   0.1814
+
+
+
+                                                                     the actual value at time T + i, ŷT +i denotes the forecasted
+                                                                    value at the same timestamp, and N is the number of periods
+      N γ,                       LT +i,q ≤ yT +i ≤ UT +i,q
+     X        2(LT +i,q −yT +i )                                     over which the forecast is evaluated. γ is the interval width
+WS =       γ+         α          , yT +i < LT +i,q                   and α = 0.15 in our settings.
+     i=1 γ + 2(yT +i −UT +i,q ) , y
+         
+                      α             T +i > UT +i,q
+                                                         (6)         C. Multivariate Multi-Step Probabilistic Load Forecasting
+                     PN
+                            |yT +i − ŷT +i |                           In this section, we described results and analysis in response
+             ND = i=1    PN                              (7)         to research question 1 by evaluating the proposed MQ-TCN
+                             i=1 |yT +i |                            model on only Caltech and JPL datasets.
+Here, the variable εi is a Boolean variable that indicates the          In addition to our proposed MQ-TCN model, we also
+coverage behavior of prediction intervals (PIs). yT +i denotes       explored two well-known forecasting models, namely XG-
+                                                                                                                 E- Moblity Dataset
+
+
+
+
+                                                                  Training Set                          Validation                    Training and
+                                                                                                                                                          Test Set
+                                                                                                           Set                        Validation Set
+                                                                                                                                                               (
+                                                (     of     ):                            (       of    ):
+                                                                                                                                                               of
+                                                                                                                                                               ):
+                                                                          Blocked Time Series Cross
+                                           Initial Parameters
+
+
+
+
+                                                                                                                                                                        Model Training with Best Parameters
+                                                                                  Validation                                                  (
+
+
+
+
+          Hyper Parameter Optimization
+                                                                                                                                              (
+
+                                                                                                                                              of
+                                               MQ-TCN
+                                                                                                                                              of
+                                                                                                                                              ):
+                                                                                                                                              ):
+
+
+
+                                          Quantile Forecasts
+                                                                                                                                                        Test Results
+
+
+
+                                              PinBall Loss                         Avg Val Loss
+                                                Function                          across all Folds
+
+                                                                                               =
+
+                                             Ground Triuth                                                                                             Evaluate Model
+                                                                                                                                                        Performance
+                                                                                     Lowest
+                                         Hyper Parameter Tuning                          / Best                                         MQ-TCN
+                                                                  No             Hyperparameters?                Yes
+
+
+
+
+                                           Fig. 5: Experimental Design for MQ-TCN Forecasting in E-Mobility Applications.
+
+
+boost and DeepAR, as baselines. Past research works did                                                       on Caltech and JPL datasets with varying settings for three
+not consider high cardinal categorical variables in conjunction                                               quantile levels (0.05, 0.50, 0.90). These models were based
+with temporal and numerical features, particularly concerning                                                 on MQ-TCN, XGBoost, and DeepAR, and utilized various
+multivariate, multi-step load forecasting of charging station                                                 lookback periods (336 hours, 168 hours) and forecasting
+using deep learning models [14] [25]. As our dataset is het-                                                  horizons (48 hours, 24 hours). Since Office-1 has a very
+erogeneous time-series nature, we have additional engineering                                                 limited number of samples, we excluded it here. For training
+challenges in adapting traditional XGBoost and DeepAR ar-                                                     XGBoost and DeepAR, we select and keep settings similar
+chitectures. We modified the traditional XGBoost architecture,                                                to the best performing MQ-TCN model based on the highest
+which is suitable only for point-based forecasting, to quantile                                               PICP score for comparison. A Bayesian optimization based
+regression based on probabilistic forecasting to compare with                                                 method named Tree Prazen Sampler [40] was used to search
+MQ-TCN. In addition, we needed to modify stride size in                                                       for hyperparameters for all models and settings. We compared
+standard DeepAR architecture to fit our experimental heteroge-                                                our proposed MQ-TCN and XGBoost models using PICP,
+neous time-series dataset. We divided our entire experimental                                                 Pinball Loss, and WS and compared MQ-TCN and DeepAR
+datasets into training, validation, and test sets, as shown in                                                using ND. The optimization was based on ND in the case
+Figure 5. To evaluate the model’s performance, we start by                                                    of DeepAR, and for our case, we considered 50% quantile
+creating a test set. This set consists of the last 10% Jtest                                                  predictions to make the comparison.
+of the data J(X, Y ) and is set aside to evaluate the model.                                                  Results and Detailed Analysis: Experimental results dis-
+The remaining data is then divided into several folds ff old                                                  played in Table II indicate a significant improvement in the
+for time-series blocked cross-validation. Each fold contains                                                  performance of our MQ-TCN model, compared to the XG-
+80% Jtrain−cv of the data for training and 20% Jval−cv for                                                    Boost baseline, across various lookback periods and forecast-
+validation. We calculate the average validation loss over all                                                 ing horizons. Our MQ-TCN model achieved higher coverage
+folds ff old and use the loss function LP B to identify the best                                              rates, particularly for site Caltech, where the optimal model
+hyperparameter set. With the best hyperparameters, we retrain                                                 utilized 168 hours of historical data and forecasted for 48
+the model using 90% Jtrain+val of J(X, Y ) without shuffling.                                                 hours. The XGBoost baseline had a coverage rate of 78.96%,
+Finally, the MQ-TCN model is trained and evaluated using the                                                  while the MQ-TCN model achieved a PICP of 84.93%, which
+previously separated Jtest test set.                                                                          is an impressive 5.97% coverage enhancement. We observe
+   Eight load forecasting models were developed and trained                                                   improvements of 28.93% multi-step forecasting (24 hours) at
+TABLE III: Results of Load Forecasting at Office-1 Site with           TABLE IV: Results of Load Forecasting at NREL Site with
+Inductive TL (Target Domain).                                          Inductive TL (Target Domain).
+                             Office-1                                                               NREL
+  Model    Data     Lookback Forecast PICP PinBall WS          ND        Model     Data    Lookback Forecast PICP PinBall WS      ND
+           Size       Time Horizon          Loss                                   Size      Time Horizon          Loss
+ MQ-TCN Full Data     168      24       93.62   2.28   21.55 0.2226     MQ-TCN Full Data     168      24    93.62   2.28   21.55 0.2226
+  (JPL-                                                                  (JPL-
+ Source)                                                                Source)
+ XGBoost              168      24       53.03   0.35   4.27 0.4430      XGBoost              168      24    46.04   2.04   22.91 0.3112
+ DeepAR                                  n/a     n/a    n/a 1.0620      DeepAR                               n/a     n/a    n/a 1.0939
+ XGBoost               72      24       60.45   0.35   3.82 0.4305      XGBoost               72      24    80.21   1.82   18.74 0.2944
+ DeepAR Full Data                        n/a     n/a    n/a 1.0587      DeepAR Full Data                     n/a     n/a    n/a 1.0562
+ XGBoost               24       4       41.02   0.33   3.48 0.4291      XGBoost               24      4     71.49   1.73   17.98 0.2681
+ DeepAR                24       1        n/a     n/a    n/a 1.0810      DeepAR                24      1      n/a     n/a    n/a 1.0520
+ XGBoost               24       1       37.24   0.33   3.62 0.4236      XGBoost               24      1     78.65   1.74   17.49 0.2718
+ MQ-TCN 2 weeks        24       4       87.50   0.89   8.14 0.4641      MQ-TCN 2 weeks        24      4     77.42   3.16   23.26 2.0426
+                       24       1       84.38   0.90   8.83 0.4725                            24      1     96.88   1.86   9.78 1.2854
+                       72      24       87.30   0.66   6.18 0.4398                            72      24    95.08   4.28   28.07 0.7647
+ MQ-TCN 1 month        24       4       91.04   0.74   6.03 0.6716      MQ-TCN 1 month        24       4    82.09   1.92   20.07 0.5969
+                       24       1       86.76   0.73   6.21 0.5372                            24       1    85.29   1.01    9.31 0.3166
+                      168      24       80.71   0.40   3.77   0.4108
+ MQ-TCN 3 months       72      24       86.12   0.61   5.07   0.5862
+                       24       4       81.02   0.49   5.14   0.4695
+                       24       1       77.88   0.49   5.44   0.4509   D. Location based Load Forecasting under Data Scarcity
+                      168      24       89.23   0.45   4.67   0.4489
+ MQ-TCN 6 months       72      24       88.55   0.42   4.25   0.4262      In response to research question 2, we conducted exper-
+                       24       4       84.14   0.45   4.37   0.4434
+                       24       1       59.08   0.44   4.44   0.4353   iments in two stages, taking into account data from four
+                                                                       EV charging stations: Caltech, JPL, Office-1, and NREL.
+                                                                       Among these four locations, Caltech and JPL sites have
+site JPL with our MQ-TCN over XGBoost. However, DeepAR                 more data samples than Office-1 and NREL, as shown in the
+outperform MQ-TCN and XGBoost in terms of ND at the                    table. Office-1 and NREL need more data samples to build
+Caltech location. A sample load forecasting of 168 hours for           efficient load models. It would be highly advantageous to
+the source sites Caltech and JPL are shown in Figure 7a and            reuse or transfer knowledge from pre-trained models (trained
+7b.                                                                    on initially large amounts of data, such as Caltech and JPL)
+                                                                       to low-resource (limited data) scenarios like at Office-1 and
+                                                                       NREL sites to forecast load.
+                                                                          In the first stage, we analyzed EV users’ demographics and
+                                                                       charging infrastructure type (public, private, or workplace). In
+                                                                       addition, we quantify the ‘similarity’ between any two charg-
+                                                                       ing sites out of four utilizing charging-related data with the
+                                                                       ‘Dynamic-Time-Warping (DTW)’ method illustrated in Figure
+                                                                       6. The choice to prioritize TL from datasets with lower DTW
+                                                                       scores, ‘JPL-Office-1’ and ‘JPL-NREL’, reflects their closer
+                                                                       resemblance. Conversely, higher DTW scores were observed
+                                                                       in ‘Caltech-Office-1’ and ‘Caltech-NREL’ pairs, indicating
+                                                                       significant dissimilarities. Emphasizing datasets with inferior
+                                                                       DTW scores enhances knowledge transfer efficacy, fostering
+                                                                       improved model generalization and predictive accuracy [41].
+                                                                          A sample load forecasting of 1 week (168 hours) and 1
+                                                                       day (24 hours) for the target site Office-1 and NREL is
+                                                                       shown in Figure 7c and 7d. Also, Considering the optimal
+                                                                       models for Office-1 and NREL based on the PICP, Figure 8a
+                                                                       displays a histogram that quantifies the frequency of specific
+                                                                       prediction error values. Unlike NREL’s, it shows that Office-
+                                                                       1’s prediction errors are tightly clustered around zero. Figure
+                                                                       8b provides kernel density estimates of these prediction errors,
+                                                                       highlighting their central tendencies and variances. It appears
+Fig. 6: Similarity Distance Measurement between Two EV                 that the accuracy of Office-1’s errors is higher and less variable
+Charging Sites Datasets using DTW method.                              as compared to NREL’s errors, which are more dispersed.
+                                                                          In the second stage, we focus on optimizing knowledge
+ (a) Sample Energy Consumption in a Week (168 Hours) for the        (b) Sample Energy Consumption in a Week (168 Hours) for the
+ location Caltech.                                                  location JPL.
+
+
+
+
+ (c) Sample Energy Consumption in a Week (168 Hours) for the        (d) Sample Energy Consumption in a Single Day (24 hours) for the
+ location Office-1 using TL from the location JPL.                  location Office-1 using TL from the location JPL.
+             Fig. 7: Sample Forecasting of Source Domain (Caltech, JPL) and Target Domain (Office-1, NREL).
+
+
+                                                                     data. Notably, with minimal data, our proposed MQ-TCN
+                                                                     models exhibit robust performance across various data sizes,
+                                                                     lookbacks, and forecasting horizons.
+                                                                        For the Office-1 site, XGBoost model, training with the
+                                                                     entire dataset, we achieve a maximum PICP score of a max-
+                                                                     imum of 53.03% during multi-step forecasting and 37.24%
+                                                                     across single-step forecasting scenarios. The performance of
+                                                                     XGBoost generally shows a trend where shorter historical
+(a) Comparison of Prediction Er- (b) Comparison of Prediction Er-
+ror Histograms.                  ror PDFs.                           data periods and forecasting horizons correlate with poorer
+                                                                     outcomes in terms of PICP and other metrics. XGBoost misses
+Fig. 8: Visual analysis of prediction errors between Office-1        the very low forecasting values. DeepAR, trained with full
+and NREL sites (a) Histogram of prediction errors; (b) Kernel        data size for a one-day and four-hour forecast horizon, does
+density estimate of prediction errors.                               not support single-step forecasting. Our proposed MQ-TCN
+                                                                     outperforms DeepAR in terms of ND in all scenarios.
+                                                                        The MQ-TCN model, especially with a one-month dataset
+transfer between similar charging sites, as discussed earlier.       for Office-1 site, exhibits notable enhancements in PICP. It
+We utilized the best pre-trained model for JPL’s location and        can reach as high as 91.04% when using one day of historical
+aimed to transfer knowledge within the exact usage pattern for       data for forecasting four hours ahead in a multi-step forecast.
+locations: Office-1 and NREL. We used the pre-trained MQ-            In contrast, it achieves a PICP score of 86.76% for single-step
+TCN model as a feature extractor, removing the last layer and        forecasting using the same dataset size. The mean PICP and
+adding TCN blocks on top of it. Additionally, we added fully         ND scores of our proposed MQ-TCN are 83.36 and 0.4813,
+connected layers to predict each quantile.                           respectively. These scores are significantly better than the
+Results and Detailed Analysis: Tables III and IV present             XGBoost’s average PICP score of 47.935 and the DeepAR’s
+a detailed comparison of forecasting performance at Office-1         average ND score of 1.067. Also, for NREL, we investigated
+and NREL using inductive TL across various models, lookback          how to transfer knowledge with a very limited amount of data,
+periods, and forecast horizons. We compare our result with           and we found that with a very limited amount of data, we
+baseline DeepAR and XGBoost models trained with complete             achieved a PICP score of 96.88% for single-step and 95.08%
+for multi-step forecasting, which also outperform the baseline      Office-1, JPL, and Caltech) by data size, learnable parameters,
+models.                                                             and PICP score. NREL has PICP scores of 96.88 and 85.29,
+                                                                    while the Office-1 ranges from 87.3 to 91.04. JPL scores 93.62,
+E. Uncertainty Handling and Impact of Variable Data Size,           and Caltech scores 84.93. Notably, the target sites (Office-1
+lookback Period and Forecast Horizon in TL                          and NREL) have lower learnable parameters than the source
+   In this section, we executed experiments using various data      sites (Caltech and JPL), with significantly higher learnable
+sizes to assess the impact of data size, lookback period, and       parameters. The plot demonstrates that even with very few
+forecast horizon on the performance of the MQ-TCN model             learnable parameters in transfer learning (TL) settings, we
+and to estimate uncertainty. We started with different data         can achieve comparable PICP scores. This reduction of the
+sizes, such as 6 months, 3 months, 1 month and 2 weeks for          number of learnable parameters without comprising model’s
+Office-1, and 1 month and 2 weeks for NREL location. We             efficiency to make efficient forecasts significantly reduce high
+tested the lookback (168, 72, 24) and future steps (24, 4, 1)       computation cost (computation time, cost for data collection,
+accordingly for multi-step and single-step prediction.              and maintenance etc.) [42].
+Results and Detailed Analysis: The bar chart in Figure 9
+presents information on the accuracy of energy consumption
+predictions in two different locations, namely Office-1 and
+NREL. Table III shows that Office-1 has higher reliability in                                                                                                       NREL
+                                                                                                                                                                    Office
+its energy consumption predictions, as reflected by a robust                                                                                                        JPL
+                                                                                                                                                                    Caltech
+PICP score of 89.23%. This suggests that Office-1’s forecasts                35528, 96.88                                261065, 93.62            96
+are generally more accurate, making its energy management                                                                                         94
+                                                                                                                                                       PICP Score
+strategy potentially more reliable and actionable. On the other                                                                                  92
+                                                                                                                                                 90
+                                                                                    13947, 91.04
+                                                                                                      140717, 87.3                               88
+                                                                                                                                                 86
+                                                                           3896, 87.5                54364, 88.55                  223089, 84.93
+                                                                                                18017, 89.23
+                                                                                        23690, 85.29                                  250000
+                                                                                                                                   200000
+                                                                                                                                150000       ter s
+                                                                         ks                                                                me
+                                                                      2w
+                                                                        ee       th                                          100000      Pa ra
+                                                                                                                           50000
+                                                                               on           ths                                      ble
+                                                                             1m           on
+                                                                                                                          0
+                                                                                                       nths                       rna
+                                                                                     6m               mo             s         Lea
+                                                                                        Data                     nth
+                                                                                               Size
+                                                                                                 17            mo
+                                                                                                            23
+                                                                    Fig. 10: Comparison of PICP Scores and Learnable Parameters
+                                                                    across Different Data Sizes and Locations
+Fig. 9: Comparison of Predictive Precision and Interval Qual-
+ity: Pinball Loss and Winkler Score for Office-1 and NREL
+                                                                                 VI. C ONCLUSION AND F UTURE W ORK
+hand, NREL achieved an impressive PICP score of 96.88%,                In our research, we successfully implemented and showed
+which might suggest superior forecasting but reveals a twist.       the applicability of our proposed MQ-TCN architecture for EV
+NREL’s larger WS indicates that its PI is wider, suggesting         load forecasting tasks for multiple geographically separate EV
+that while NREL’s forecasts often capture the actual values, the    charging sites under data scarcity. Based on the evaluation of
+range of these predictions is broad, pointing to less certainty     the MQ-TCN model to transfer knowledge for load forecasting
+about where the true values will fall within these ranges.          tasks among charging stations in TL settings, we described its
+The forecasting model for Office-1 is more precise, providing       effectiveness and adaptability. The MQ-TCN model provides
+accurate predictions that make its energy management strategy       load forecasting with minimal training data, precisely two
+more reliable.                                                      weeks or 336 data instances, with high accuracy, reducing
+We found no conclusive evidence of a relationship between           training time and, thus, computation cost. Though MQ-TCN
+lookback size, forecast horizon, and forecast accuracy. It          achieved impressive results in transferring knowledge and
+was found that forecasting performance could be reduced or          showed adaptability to learn under data scarcity, it failed in
+increased by increasing or decreasing the lookback period           some novel situations. We plan to explore this problem in the
+while keeping the forecast horizon constant. Similarly, with        future, considering continual representation learning and the
+a fixed lookback period, increasing or decreasing the forecast      addition of meta-information.
+horizon can increase or decrease forecast accuracy. As shown
+in Table III, at the Office-1 site, an increasing lookback period                                     ACKNOWLEDGMENT
+for a fixed day-ahead forecast horizon from 72 hours to 168           This work results from the project SALM (01IS20098B)
+hours decreased forecast accuracy.                                  funded by BMBF (German Federal Ministry of Education and
+The scatter plot in Figure 10 compares locations (NREL,             Research).
+                               R EFERENCES                                         [20] C. Xu, Y. Sun, A. Du, and D. ce Gao, “Quantile regression based
+                                                                                        probabilistic forecasting of renewable energy generation and building
+ [1] A. Banerji, K. Sharma, and R. L. R. Singh, “Integrating renewable                  electrical load: A state of the art review,” Journal of Building Engineer-
+     energy and electric vehicle systems into power grid: Benefits and                  ing, 2023.
+     challenges,” 2021 Innovations in Power and Advanced Computing                 [21] C. Neuman, A. Meintz, and M. Jun, “Workplace charging data collection
+     Technologies (i-PACT), pp. 1–6, 2021.                                              and behavior,” 2021.
+ [2] B. Singh, G. Majeau-Bettez, and A. H. Strømman, “Corrigendum to:              [22] Z. J. Lee, T. Li, and S. H. Low, “ACN-Data: Analysis and Applications
+     Hawkins, t. r., b. singh, g. majeau-bettez, and a. h. strømman. 2012.              of an Open EV Charging Dataset,” in Proceedings of the Tenth Inter-
+     comparative environmental life cycle assessment of conventional and                national Conference on Future Energy Systems, ser. e-Energy ’19, Jun.
+     electric vehicles. journal of industrial ecology doi: 10.1111/j.1530-              2019.
+     9290.2012.00532.x,” Journal of Industrial Ecology, vol. 17, 2013.             [23] T. Chen, T. He, M. Benesty, V. Khotilovich, Y. Tang, H. Cho, K. Chen,
+ [3] International Energy Agency (IEA), “Global ev outlook 2024,”                       R. Mitchell, I. Cano, T. Zhou et al., “Xgboost: extreme gradient
+     https://www.iea.org/reports/global-ev-outlook-2024, 2024, 2024-05-10.              boosting,” R package version 0.4-2, vol. 1, no. 4, pp. 1–4, 2015.
+     [Online]. Available: https://www.iea.org/reports/global-ev-outlook-2022       [24] V. Flunkert, D. Salinas, and J. Gasthaus, “Deepar: Probabilistic forecast-
+ [4] K. Clement-Nyns, E. Haesen, and J. Driesen, “The impact of charging                ing with autoregressive recurrent networks,” ArXiv, vol. abs/1704.04110,
+     plug-in hybrid electric vehicles on a residential distribution grid,” IEEE         2017.
+     Transactions on Power Systems, vol. 25, no. 1, pp. 371–380, 2010.             [25] H. Rathore, H. K. Meena, and P. Jain, “Forecasting of evs charging
+ [5] M. W. Ali, “Deep adaptive knowledge-aware learning for e-mobility,” in             behavior using deep neural networks,” in 2023 International Conference
+     Organic Computing - Doctoral Dissertation Colloquium 2022, S. Tom-                 on Communication, Circuits, and Systems (IC3S), 2023, pp. 1–6.
+     forde and C. Krupitzer, Eds. kassel university press, 2022, p. 139–155.       [26] H. J. Feng, L. C. Xi, Y. Z. Jun, Y. X. Ling, and H. Jun, “Review
+ [6] B. Wang, D. Zhao, P. Dehghanian, Y. Tian, and T. Hong, “Aggregated                 of electric vehicle charging demand forecasting based on multi-source
+     electric vehicle load modeling in large-scale electric power systems,”             data,” in 2020 IEEE Sustainable Power and Energy Conference (iSPEC),
+     IEEE Transactions on Industry Applications, vol. 56, no. 5, pp. 5796–              2020, pp. 139–146.
+     5810, 2020.                                                                   [27] T. Hu, K. Liu, and H. Ma, “Probabilistic electric vehicle charging
+ [7] J. Vuelvas, F. Ruiz, and G. Gruosso, “Energy price forecasting for                 demand forecast based on deep learning and machine theory of mind,”
+     optimal managing of electric vehicle fleet,” IET Electrical Systems in             Jun. 2021, pp. 795–799.
+     Transportation, vol. 10, no. 4, pp. 401–408, 2020.                            [28] D. Zhou, Z. Guo, Y. Xie, Y. Hu, D. Jiang, Y. Feng, and D. Liu,
+ [8] Y. B. Khoo, C.-H. Wang, P. Paevere, and A. Higgins, “Statistical                   “Using bayesian deep learning for electric vehicle charging station
+     modeling of electric vehicle electricity consumption in the victorian              load forecasting,” Energies, vol. 15, no. 17, 2022. [Online]. Available:
+     ev trial, australia,” Transportation Research Part D: Transport and                https://www.mdpi.com/1996-1073/15/17/6195
+     Environment, vol. 32, pp. 263–277, 2014.
+                                                                                   [29] L. Cai, J. Gu, and Z. Jin, “Two-layer transfer-learning-based architec-
+ [9] O. Frendo, N. Gaertner, and H. Stuckenschmidt, “Improving smart
+                                                                                        ture for short-term load forecasting,” IEEE Transactions on Industrial
+     charging prioritization by predicting electric vehicle departure time,”
+                                                                                        Informatics, vol. 16, no. 3, pp. 1722–1732, 2020.
+     IEEE Transactions on Intelligent Transportation Systems, vol. 22, pp.
+                                                                                   [30] D. Zhou, S. Ma, J. Hao, D. Han, D. Huang, S. Yan, and T. Li,
+     6646–6653, 2020.
+                                                                                        “An electricity load forecasting model for integrated energy system
+[10] M. Liang, W. Li, J. Yu, and L. Shi, “Kernel-based electric vehicle
+                                                                                        based on bigan and transfer learning,” Energy Reports, vol. 6, pp.
+     charging load modeling with improved latin hypercube sampling,” in
+                                                                                        3446–3461, 2020. [Online]. Available: https://www.sciencedirect.com/
+     2015 IEEE Power & Energy Society General Meeting. IEEE, 2015,
+                                                                                        science/article/pii/S235248472031711X
+     pp. 1–5.
+                                                                                   [31] M. Weber, M. Auch, C. Doblander, P. Mandl, and H.-A. Jacobsen,
+[11] E. Xydas, C. E. Marmaras, L. M. Cipcigan, A. S. Hassan, and N. Jenkins,
+                                                                                        “Transfer learning with time series data: A systematic mapping study,”
+     “Forecasting electric vehicle charging demand using support vector
+                                                                                        IEEE Access, vol. 9, pp. 165 409–165 432, 2021.
+     machines,” 2013 48th International Universities’ Power Engineering
+     Conference (UPEC), pp. 1–6, 2013.                                             [32] A. Ostermann, Y. Fabel, K. Ouan, and H. Koo, “Forecasting charg-
+[12] M. Majidpour, C. Qiu, P. Chu, H. R. Pota, and R. Gadh, “Forecasting                ing point occupancy using supervised learning algorithms,” Energies,
+     the ev charging load based on customer profile or station measurement?”            vol. 15, no. 9, p. 3409, 2022.
+     Applied energy, vol. 163, pp. 134–141, 2016.                                  [33] A. Almaghrebi, F. Aljuheshi, M. Rafaie, K. James, and M. Alahmad,
+[13] S. Koohfar, W. Woldemariam, and A. Kumar, “Prediction of                           “Data-driven charging demand prediction at public charging stations us-
+     electric vehicles charging demand: A transformer-based deep learning               ing supervised machine learning regression methods,” Energies, vol. 13,
+     approach,” Sustainability, vol. 15, no. 3, 2023. [Online]. Available:              no. 16, p. 4231, 2020.
+     https://www.mdpi.com/2071-1050/15/3/2105                                      [34] S. Bai, J. Z. Kolter, and V. Koltun, “An empirical evaluation of generic
+[14] G. Van Kriekinge, C. De Cauwer, N. Sapountzoglou, T. Coosemans,                    convolutional and recurrent networks for sequence modeling,” arXiv
+     and M. Messagie, “Day-ahead forecast of electric vehicle charging                  preprint arXiv:1803.01271, 2018.
+     demand with deep neural networks,” World Electric Vehicle Journal,            [35] F. Yu and V. Koltun, “Multi-scale context aggregation by dilated
+     vol. 12, no. 4, 2021. [Online]. Available: https://www.mdpi.com/                   convolutions,” arXiv preprint arXiv:1511.07122, 2015.
+     2032-6653/12/4/178                                                            [36] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image
+[15] P. Banda, M. A. Bhuiyan, K. N. Hasan, and K. Zhang, “Assessment                    recognition,” in 2016 IEEE Conference on Computer Vision and Pattern
+     of hybrid transfer learning method for forecasting ev profile and                  Recognition (CVPR), 2016, pp. 770–778.
+     system voltage using limited ev charging data,” Sustainable Energy,           [37] T. Hong and S. Fan, “Probabilistic electric load forecasting: A tutorial
+     Grids and Networks, vol. 36, p. 101191, 2023. [Online]. Available:                 review,” International Journal of Forecasting, vol. 32, no. 3, pp. 914–
+     https://www.sciencedirect.com/science/article/pii/S2352467723001996                938, 2016.
+[16] K. Nath, S. N. Gowda, C. Zhang, R. S. Gowda, and R. Gadh, “Short-             [38] F. Zhuang, Z. Qi, K. Duan, D. Xi, Y. Zhu, H. Zhu, H. Xiong, and
+     term electric vehicle charging load forecasting using transfer and meta-           Q. He, “A comprehensive survey on transfer learning,” Proceedings of
+     learning,” in 2024 IEEE Power & Energy Society Innovative Smart Grid               the IEEE, vol. 109, pp. 43–76, 2019.
+     Technologies Conference (ISGT), 2024, pp. 1–5.                                [39] S. J. Taylor and B. Letham, “Forecasting at scale,” The American
+[17] M. W. Ali, “Heterogeneous multi-source deep adaptive knowledge-                    Statistician, vol. 72, pp. 37 – 45, 2018.
+     aware learning for e-mobility,” in 2022 IEEE International Conference         [40] J. Bergstra, R. Bardenet, Y. Bengio, and B. Kégl, “Algorithms for hyper-
+     on Autonomic Computing and Self-Organizing Systems Companion                       parameter optimization,” Advances in neural information processing
+     (ACSOS-C), 2022, pp. 57–59.                                                        systems, vol. 24, 2011.
+[18] C. C. Garcı́a, R. G. i Ferret, M. C. Zambrano, M. S. Cardona,                 [41] H. Ismail Fawaz, G. Forestier, J. Weber, L. Idoumghar, and P.-A.
+     D. Gkatzoflias, P. Dilara, I. Drossinos, and A. V. Donati, “Data collection        Muller, “Transfer learning for time series classification,” in 2018 IEEE
+     and reporting guidelines for european electro-mobility projects,” 2014.            International Conference on Big Data (Big Data), 2018, pp. 1367–1376.
+[19] D. Gielen, F. Boshell, D. Saygin, M. D. Bazilian, N. Wagner, and              [42] N. C. Thompson, K. Greenewald, K. Lee, and G. F. Manso, “The com-
+     R. Gorini, “The role of renewable energy in the global energy trans-               putational limits of deep learning,” arXiv preprint arXiv:2007.05558,
+     formation,” Energy Strategy Reviews, 2019.                                         2020.
+

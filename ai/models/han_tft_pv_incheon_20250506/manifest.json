@@ -1,0 +1,90 @@
+{
+  "model_id": "han_tft_pv_incheon_20250506",
+  "owner": "han_mingu",
+  "model_type": "tft_style_weather_encoder_pv_decoder",
+  "config": {
+    "station_name": "인천시",
+    "weather_station_name": "인천",
+    "encoder_length": 168,
+    "decoder_length": 24,
+    "prediction_length": 24,
+    "hidden_size": 64,
+    "lstm_layers": 2,
+    "attention_heads": 4,
+    "dropout": 0.1,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "max_epochs": 30,
+    "seed": 42,
+    "train_start": "2025-01-01",
+    "train_end": "2025-07-01",
+    "test_start": "2025-07-01",
+    "test_end": "2025-08-01"
+  },
+  "feature_order": [
+    "기온",
+    "강수량",
+    "습도",
+    "적설량",
+    "구름량",
+    "일조시간",
+    "일사량",
+    "irradiance_sq",
+    "cloud_inv",
+    "hour_sin",
+    "hour_cos",
+    "day_sin",
+    "day_cos",
+    "is_weekend",
+    "log_capacity"
+  ],
+  "required_runtime_files": [
+    "best_model.pt",
+    "scalers.json",
+    "manifest.json"
+  ],
+  "active_weight": {
+    "file": "best_model.pt",
+    "source": "kakaotalk_capstone_chat_uploaded_by_chae_seunghyun_for_han_mingu_pv",
+    "received_at": "2026-05-09T20:27:58+09:00",
+    "sha256": "280c8d74be8db276ebabf457e4bc5dd65673f31bcbe5dd64ce0fef1667f7471e",
+    "previous_sha256": "918b5a8edde4db9de02f3bf6dc47df3c92810c14e626876d29ce42d0da3d8f86",
+    "previous_backup": "best_model.before_kakaotalk_20260509.pt"
+  },
+  "training": {
+    "pv_max_mwh": 47.835385,
+    "source_files": {
+      "pv_csv": "/Users/inje/Desktop/develop/projects/capstone_main/artifacts/received_models/2026-05-06/han_pv_data/한국전력거래소_지역별 시간별 태양광 및 풍력 발전량_20251231 (1) (2).csv",
+      "weather_csv": "/Users/inje/Desktop/develop/projects/capstone_main/artifacts/received_models/2026-05-06/han_pv_data/OBS_ASOS_TIM_20260429140801 (1).csv"
+    },
+    "metrics_status": "verified_against_packaged_training_frame_2025_07_runtime_payloads",
+    "metrics": {
+      "mae_mwh": 1.337257,
+      "rmse_mwh": 2.092281,
+      "wape_percent": 13.225409,
+      "daytime_wape_percent": 11.231783,
+      "validation_records": 744,
+      "validation_start": "2025-07-01",
+      "validation_end": "2025-07-31",
+      "validation_input_mode": "encoder_weather_168h + decoder_pv_24h + future_weather_24h from packaged training_frame.csv"
+    },
+    "previous_package_metrics": {
+      "mae_mwh": 1.3229192071392692,
+      "rmse_mwh": 2.108676899641383,
+      "mape_percent": 14904.514883540127,
+      "daytime_mae_mwh": 1.9387836531682805,
+      "daytime_rmse_mwh": 2.768791163125377
+    }
+  },
+  "api_input": {
+    "supports": [
+      "encoder_weather_168h",
+      "encoder_weather_24h repeated context fallback"
+    ],
+    "requires": [
+      "base_date",
+      "decoder_pv_24h",
+      "future weather 24h or encoder_weather_24h"
+    ]
+  }
+}

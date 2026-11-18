@@ -1,0 +1,375 @@
+                                             Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+
+                                                             Frederik Boe Hüttel 1 Inon Peled 1 Filipe Rodrigues 1 Francisco C. Pereira 1
+
+
+                                                                  Abstract                                 mand, the data used is often not publicly available. The lack
+                                              Electric vehicles can offer a low carbon emission            of accessibility obscures results and reduces comparability.
+                                              solution to reverse rising emission trends. How-             Fortunately, we find that comments on lack of real-world
+                                                                                                           public data are inaccurate (Kim & Kim, 2021). As high-
+
+
+
+
+arXiv:2106.10940v1 [cs.LG] 21 Jun 2021
+                                              ever, this requires that the energy used to meet
+                                              the demand is green. To meet this requirement,               lighted by (Amara-Ouali et al., 2021), there exist multiple
+                                              accurate forecasting of the charging demand is               open datasets, which are still underutilized in research.
+                                              vital. Short and long-term charging demand fore-             These public datasets provide sufficient data for research and
+                                              casting will allow for better optimisation of the            forecasting. The datasets contains both diverse spatial and
+                                              power grid and future infrastructure expansions.             temporal resolutions. Prominent examples include the city
+                                              In this paper, we propose to use publicly avail-             of Palo Alto, U.S. which is on a dense spatial resolution with
+                                              able data to forecast the electric vehicle charging          observations going back to 2011 (CityofPaloAlto, 2021),
+                                              demand. To model the complex spatial-temporal                and the city of Perth, Scotland which spans a spatially sparse
+                                              correlations between charging stations, we argue             area with observations from 2016 to 2019 (PerthandKinross,
+                                              that Temporal Graph Convolution Models are the               2020). Two other prominent datasets are from Boulder, U.S.
+                                              most suitable to capture the correlations. The pro-          (Colorado, 2020) and Dundee, Scotland (CityOfDundee,
+                                              posed Temporal Graph Convolutional Networks                  2019), which again spans a different spatial and temporal
+                                              provide the most accurate forecasts for short and            resolutions. We propose to use the publicly available data
+                                              long-term forecasting compared with other fore-              from to forecast the EV charging demand.
+                                              casting methods.
+                                                                                                           One of the challenges in forecasting the EV charging de-
+                                                                                                           mand is the complex spatial and temporal dependencies
+                                                                                                           between EVCS (Amara-Ouali et al., 2021). We argue that
+                                         1. Introduction
+                                                                                                           forecasts of EV charging demand must account for the de-
+                                         Electric Vehicles (EVs) offer lower carbon emission when          pendencies between the stations, however, this dependence
+                                         compared to gasoline-powered vehicles and can reverse ris-        is often neglected by modelling the entire system of EVCS
+                                         ing emission trends assuming a green energy mix (Miotti           jointly (Kim & Kim, 2021). In recent years there has been
+                                         et al., 2016; Coignard et al., 2018; Wei et al., 2021). As        increased research into Graph Convolution Network (GCN)
+                                         EV adoption increases and the charging network expands,           which can handle graph-structured data (Kipf & Welling,
+                                         forecasting the charging demand becomes increasingly es-          2016) and extensions that model temporal graph-structured
+                                         sential for energy providers seeking to provide green energy      data (Zhao et al., 2020). We leverage these temporal graph
+                                         to meet the demand (Rolnick et al., 2019). Operators of EV        convolutions to capture the complex spatio-temporal cor-
+                                         Charging Stations (EVCS) also have a stake in the forecast        relations of the EVCS. The use of temporal GCN is, to
+                                         as they seek to find optimal locations for expansion of the       our knowledge, previously unexplored in the domain of EV
+                                         infrastructure (Cheon & Kang, 2017; Tao et al., 2018).            charging demand forecasting.
+                                         Forecasting of EV charging demand is generally well stud-
+                                         ied and explored in the literature, with methods ranging from     2. Related work
+                                         queuing theory to machine and statistical learning (Khoo
+                                                                                                           We now provide a brief overview of related works. For a
+                                         et al., 2014; Xydas et al., 2016; Kim & Kim, 2021; Amara-
+                                                                                                           more in-depth review of current publicly available datasets
+                                         Ouali et al., 2021). Despite this interest in modelling the de-
+                                                                                                           and models, the reader is referred to (Amara-Ouali et al.,
+                                           *
+                                             Equal contribution 1 Department of Management, Technical      2021) and the related work section in (Kim & Kim, 2021).
+                                         University of Denmark, Lyngby, Denmark. Correspondence to:
+                                         Fredeirk Boe Hüttel <fbohu@dtu.dk>.
+                                                                                                           Temporal forecasting Related studies can be broken
+                                         Tackling Climate Change with Machine Learning Workshop at         down as either classical statistical or machine learning fore-
+                                         ICML 2021.                                                        casting methods. The classical statistical models often pro-
+                            Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+viding interpretable parameters such as regression (Cheon
+& Kang, 2017) and ARIMA models (Amini et al., 2016).
+Machine learning methods, such as random forest (Ma-
+jidpour et al., 2016; Lu et al., 2018) and deep learning
+models (Chee Tat & Fränti, 2018; Kim & Kim, 2021), can
+provide higher forecast accuracy, at the expense of inter-
+pretability.
+                                                                              (a) Raster map                      (b) Graph
+Spatio-temporal forecasting In recent years there has
+been an increase in spatio-temporal forecasting with multi-          Figure 1. Figures showing the 2 topologies. Charging stations
+ple methods for extraction of spatial and temporal features.         locations are marked with red circles. Figure 1a A raster map over
+Research has focused on raster maps above areas and using            the city of Palo Alto. Figure 1b Graph over charging stations in the
+convolutional neural networks (CNN) (LeCun et al., 2015)             city of Palo Alto, excluding edges within every station to highlight
+                                                                     the overall graph structure.
+to extract spatial features and recurrent deep learning layers
+to learn temporal features (Rodrigues & Pereira, 2018). The
+convolution operators have been extended to work on non-             the area. N is the number of nodes and E is the set of edges
+euclidean data using using graph convolutions and graph              between the nodes in V . The forecast is then for the daily
+convolutional networks (GCN) (Kipf & Welling, 2016). The             energy demand for each individual charging station. To
+GCN models have seen some use in forecasting the demand              model the correlation between individual charging stations,
+of EVCS in a shared fleet of EVs (Luo et al., 2019). Recent          the weight of an edge ei,j is computed as:
+research have extendedn the GCN to model temporal cor-
+relations by incorporation of recurrent deep learning layers
+                                                                                (
+                                                                                  exp(−h(xi , xj )) if h(xi , xj ) < 2.5
+into the GCN (T-GCN) (Zhao et al., 2020).                                 eij =                                          ,    (2)
+                                                                                  0                  otherwise
+
+3. Methodology                                                       where xi and xj are the location of the charging stations
+                                                                     and h is the Haversine Distance in km. We can setup the
+Incorporating the spatio-temporal correlations into the fore-
+                                                                     adjacency matrix A ∈ RN ×N using E (Zhao et al., 2020).
+cast should provide better estimates of the EV charging
+                                                                     Stations far away from each-other is assumed to no be very
+demand compared to methods that only consider a single
+                                                                     correlated, which makes us set edges for large distance to
+charging station or all the charging stations jointly as one
+                                                                     be non-existent.
+time-series.
+                                                                     3.1. Modelling
+Problem definition Given the temporal signal X =
+{x1 , x2 , · · · , xt } containing the historical daily energy de-   For modelling the spatial and temporal features with the
+mand for each charging station in an area and a topology             raster maps, a CNN can obtain spatial and temporal cor-
+G, which models the spatial correlations of the charging             relation by stacking historical raster maps in the channel
+stations, the problem of spatio-temporal forecasting can be          dimension, making each grid cell a time-series of demand
+considered as learning a a function f on topology G with             for the spatial location.
+temporal signal X.
+                                                                     Long short term memory As an alternative to stacking
+    [Xt+1 , · · · , Xt+T ] = f (G; (Xt−n , Xt−1 , Xt )) ,     (1)    raster maps, spatial features can be extracted from each
+                                                                     raster map using a CNN. Then each grid cell can be stacked
+where n is the length of the historical signal and T is the          as a time-series and propagated through a long short term
+forecast horizon. G can be presented through a Raster map            memory cell (CNN+LSTM) (Hochreiter & Schmidhuber,
+or with a Graph, as follows.                                         1997). The CNN and LSTM then capture the spatial and
+                                                                     temporal features, respectively.
+Raster-map In this case, the topology G is a grid span-
+ning the entire area. Each grid cell then pertains to a specific     Temporal Graph Convolutional Network The spatial
+spatial location in the area, and corresponds to the sum of          features the CNN captures will be heavily influenced by
+daily energy demand for stations in the cell. The forecast           the size of the grid cells. If the grid is sufficiently fine-
+using a raster map is the daily demand in each grid cell.            grained, then the CNN captures the topological structure,
+                                                                     but at the expense of many grid cells with zero observations.
+Graph In this cases, the topology is a graph G = (V, E),             On the other hand, if the grid cells are made too large, the
+where V = {v1 , v2 , .., vN } is the set of charging stations in     model will not capture the complex topological structure.
+                           Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+Conversely, a Graph Convolutional Network (GCN) can
+capture the complex topological structure with graph convo-
+lutions. The GCN constructs a filter in the Fourier domain,
+which acts on each graph node and its first-order neighbour-
+hood to capture spatial dependencies between nodes (Kipf
+& Welling, 2016). A 2-layered GCN model is formulated
+as:                                          
+         f (A, X) = σ A  b Relu AXWb     0 W1 ,          (3)
+
+where X is the feature matrix, A is the adjacency matrix,
+Ab=D  e − 21 A
+             eDe − 21 denotes a preprocessing step, Ab= A+
+IN is a matrix with self-connection
+                        P e             structure, and D
+                                                       e is a
+degree matrix, D = j Aij . W0 and W1 are the weight
+                  e
+matrices in the first and second layers, respectively, and
+σ(·), Relu() is the activation function.
+The GCN extends to account for a temporal signal by com-
+bining the GCN with LSTM layers (T-GCN) (Zhao et al.,                    Figure 2. Palo alto and the location of EV chargers
+2020). The key equations of the T-GCN with a LSTM cell
+can be summarised as follows, where f (A, Xt ) is the graph
+convolution from Equation 3:                                    depicted in Figure 2. The data set contains various meta-
+                                                                data on the charging transaction such as Gasoline Savings,
+          it = σg (Wi f (A, Xt ) + Ui ht−1 + bi ) ,      (4)    Charging time, Plug type. The meta-data is excluded from
+                                                                the analysis, because it is not available for the other public
+         ft = σg (Wf f (A, Xt ) + Uf ht−1 + bf ) ,       (5)    datasets. We focus on using purely the energy consump-
+                                                                tion (kWh) for a transaction since this is computeable for
+         ot = σg (Wo f (A, Xt ) + Uo ht−1 + bo ) ,       (6)
+                                                                all datasets, making the models applicable to those. The
+          c̃t = σc (Wc f (A, Xt ) + Uc ht−1 + bc ) ,     (7)    consumption is aggregated into a a daily energy demand for
+                 ct = ft    ct−1 + it        c̃t ,       (8)    each of the stations in Palo Alto. For the raster map, we use
+                                                                a grid of 5 × 5 and for the graph is created as explained in
+                     ht = ot    σh (ct ) .               (9)    section 3. The data from Palo Alto is continually updated
+The matrices Wi−c and Ui−c contain the trainable weights,       and contains data up until 2021.
+   denotes the Hadamard product and c0 = 0 and h0 = 0. In
+summary, the T-GCN models capture both the complex topo-        5. Experiments
+logical structure of the charging stations, using the GCN,
+and the temporal structure of the data, using the LSTM          The models are tested on three different forecasts horizons;
+layers.                                                         1 day, 7 day and 30 day. The different horizons thus reflect
+                                                                various usages of the models, as follows. The long forecast
+                                                                horizon of 30 days can be used by EVCS operators looking
+3.2. Loss function
+                                                                to forecast usage of their system. The short horizons can
+We denote the forecasted value as Xbt+1:t+T and the realised    be used by energy providers to plan for and optimise the
+value as Xt+1:t+T , and aim to minimise forecast errors. The    dayahead energy consumption, such that they can meet the
+models are optimized using the mean absolute error loss and     demand with clean energy. Models for the 1 and 7 day
+stochastic gradient descent. The networks are regularised       forecasts are trained using the last 30 days. For the 30 days
+through `2 regularisation of the parameter, making the loss:    forecast, the models use the last 120 days. The models
+                                                                are implemented in keras (Chollet et al., 2015) and the
+                           bt+1:t+T | + λβ 2 ,
+           L = |Xt+1:t+T − X                            (10)    graphs are implemented using stellar graph (Data61, 2018).
+                                                                The CNN uses 16 kernels to forecast based on the last 30
+where λ is a tuneable hyperparameter and β denotes the
+                                                                days raster maps. The CNN+LSTM uses 16 kernels in the
+parameters of the models.
+                                                                CNN and 50 hidden units in the LSTM. The T-GCN uses
+                                                                16 and 10 filters along with 50 hidden units in the LSTM.
+4. Data                                                         All models are fitted using the loss in Equation 10 with
+                                                                λ = 10−3 and the ADAM optimiser (Kingma & Ba, 2014)
+The proposed models are empirically evaluated using data        for 1000 epochs1 .
+from the city of Palo Alto (CityofPaloAlto, 2021). The
+                                                                   1
+data consists of EV charging transactions at the locations             The code is public at Github
+                           Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+
+
+
+                        (a) 7 day forecast                                                (b) 30 day forecast
+
+Figure 3. Visualisation of the forecast from the various models. Each model appears to have captured the temporal correlations of the
+system. In Figure 3a and Figure 3b we show forecasts from the different models with different horizons. From the 30 day forecast a
+weekly pattern from all the forecasts can be observed.
+
+
+5.1. Evaluation                                                      is able to capture the small difference that is present in each
+                                                                     EVCS, as opposed to the raster map presentation, and to
+We evaluate the models on the forecast daily energy de-
+                                                                     capture the correlations between the EVCS. Figure 3 shows
+mand for the total system, which is the sum of all the en-
+                                                                     the forecast for the different models. All models appear to
+ergy needed for the area. For the T-GCN model, it is the
+                                                                     capture the weekly patterns, where the demand is lower in
+sum of the forecasts for each station. For the CNN and
+                                                                     the weekends, compared to weekdays.
+CNN+LSTM it is the sum for each grid cell. We compare
+the CNN, CNN+LSTM and T-GCN with a baseline Auto-
+regressive (AR) model fitted on the entire system and a              6. Conclusion
+baseline of a vector auto-regressive (VAR). The VAR model
+                                                                    Throughout this paper, we have argued for the use of pub-
+uses the grid cells from the raster map as inputs. Both base-
+                                                                    licly available data for forecasting the electric vehicle charg-
+lines models use a model order of 30, in order to match the
+                                                                    ing demand. Based on the experimental results, Graph
+30 lagged values as the deep learning model are trained with.
+                                                                    Convolutional Networks have superior forecasting perfor-
+We train the models with data between 2012 and 2019.
+                                                                    mance compared to other methods. In particular, we see that
+                                                                    the Graph Convolutional Network model can capture the
+5.2. Experimental Results                                           spatial and temporal correlations of the network of charging
+We evaluate the models with the Root mean squared error             stations better than plain convolutional neural networks.
+(RMSE) across the different forecast horizons (Table 1).            The models presented in this work have assumed a known
+As can be expected, finer spatial resolution yields higher          expansion of the charging station network. In future work,
+predictive quality. Since the LSTMs in both the T-GCN and           we will incorporate dynamically evolving graphs. Further,
+the CNN+LSTM are the same, the graph convolutions are               previous research in demand forecasting has shown that the
+superior to convolutions at extracting features required for        observed demand is probably censored, e.g., by the maxi-
+the forecast. Across the different forecast horizons, the T-        mum capacity of the charging stations or through demand
+GCN provides the best forecasting of the models. For both           lost to competing charging services, which makes the true
+the short and long term predictions, the T-GCN is showing           demand latent. There exist various ways to handle censored
+a lower RMSE than the other proposed methods. The graph             data which we intend to explore in future work (Biganzoli
+                                                                    et al., 2002; Greene, 2005; Gammelli et al., 2020).
+                                                                    We hope that the results and arguments encourage re-
+Table 1. Average RMSE from 3 runs. Uncertainty in the scores is
+                                                                    searchers to use publicly available data for research into EV
+represented as the standard deviation over the 3 runs.
+                                                                    charging demand. In particular, we encourage researchers
+                                                                    and stakeholders in EV charging to use Graph Convolu-
+     M ODEL               1 DAY      7 DAYS      30 DAYS
+                                                                    tional Networks to forecast the electric vehicle charging
+     AR(30)                 178         251           252           demand. We believe the methods provided here can help
+     VAR(30)                189         203           201           expand the electric vehicle charging infrastructure and help
+     CNN               144 ± 12     243 ± 4       211 ± 4
+     CNN+ LSTM          95 ± 11     192 ± 8       187 ± 7           reverse rising emissions trends.
+     T-GCN               61 ± 8    184 ± 9      161 ± 15
+                         Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+References                                                    Data61, C.  Stellargraph machine learning library.
+                                                                https://github.com/stellargraph/
+Amara-Ouali, Y., Goude, Y., Massart, P., Poggi, J.-M., and
+                                                                stellargraph, 2018.
+ Yan, H. A review of electric vehicle load open data and
+ models. working paper or preprint, April 2021. URL           Gammelli, D., Peled, I., Rodrigues, F., Pacino, D.,
+ https://hal.inria.fr/hal-03028375.                             Kurtaran, H. A., and Pereira, F. C. Estimating la-
+                                                                tent demand of shared mobility through censored
+Amini, M. H., Kargarian, A., and Karabasoglu,
+                                                                gaussian processes. Transportation Research Part C:
+ O.    Arima-based decoupled time series forecast-
+                                                                Emerging Technologies, 120:102775, 2020. ISSN 0968-
+ ing of electric vehicle charging demand for stochas-
+                                                                090X. doi: https://doi.org/10.1016/j.trc.2020.102775.
+ tic power system operation.      Electric Power Sys-
+                                                                URL        https://www.sciencedirect.com/
+ tems Research, 140:378–390, 2016.         ISSN 0378-
+                                                                science/article/pii/S0968090X20306859.
+ 7796.     doi: https://doi.org/10.1016/j.epsr.2016.06.
+ 003. URL https://www.sciencedirect.com/                      Greene, W. Censored data and truncated distributions. The
+ science/article/pii/S0378779616302115.                         Palgrave Handbook of Econometrics Volume 1: Econo-
+Biganzoli, E., Boracchi, P., and Marubini, E. A general         metric Theory, 1, 02 2005. doi: 10.2139/ssrn.825845.
+  framework for neural network models on censored sur-        Hochreiter, S. and Schmidhuber, J. Long short-term mem-
+  vival data. Neural networks : the official journal of the     ory. Neural Comput., 9(8):1735–1780, November 1997.
+  International Neural Network Society, 15:209–18, 04           ISSN 0899-7667. doi: 10.1162/neco.1997.9.8.1735.
+  2002. doi: 10.1016/S0893-6080(01)00131-9.                     URL https://doi.org/10.1162/neco.1997.
+Chee Tat, T. H. and Fränti, P. Real-time electric vehicle      9.8.1735.
+  load forecast to meet timely energy dispatch. In 2018       Khoo, Y. B., Wang, C.-H., Paevere, P., and Hig-
+  IEEE International Conference on Service Operations           gins, A.       Statistical modeling of electric vehi-
+  and Logistics, and Informatics (SOLI), pp. 148–153, 2018.     cle electricity consumption in the victorian ev trial,
+  doi: 10.1109/SOLI.2018.8476758.                               australia. Transportation Research Part D: Trans-
+Cheon, S. and Kang, S.-J. An electric power consumption         port and Environment, 32:263–277, 2014.         ISSN
+  analysis system for the installation of electric vehicle     1361-9209. doi: https://doi.org/10.1016/j.trd.2014.08.
+  charging stations. Energies, 10(10), 2017. ISSN 1996-         017. URL https://www.sciencedirect.com/
+ 1073. doi: 10.3390/en10101534. URL https://www.                science/article/pii/S1361920914001187.
+  mdpi.com/1996-1073/10/10/1534.
+                                                              Kim, Y. and Kim, S. Forecasting charging demand of
+Chollet, F. et al. Keras. https://keras.io, 2015.               electric vehicles using time-series models. Energies, 14
+                                                                (5), 2021. ISSN 1996-1073. doi: 10.3390/en14051487.
+CityOfDundee. Electric vehicle charging sessions dundee,        URL https://www.mdpi.com/1996-1073/14/
+  Mar 2019. URL https://data.dundeecity.                        5/1487.
+  gov.uk/dataset/ev-charging-data.
+                                                             Kingma, D. P. and Ba, J. Adam: A method for stochastic
+CityofPaloAlto.       Electric vehicle charging station        optimization, 2014. URL http://arxiv.org/abs/
+  usage (july 2011- dec 2020). open data. city                 1412.6980. cite arxiv:1412.6980Comment: Published
+  of palo alto, 2021.            URL https://data.             as a conference paper at the 3rd International Conference
+  cityofpaloalto.org/dataviews/257812/                         for Learning Representations, San Diego, 2015.
+  electric-vehicle-charging-station-usage-july-2011-dec-2020/.
+                                                             Kipf, T. N. and Welling, M. Semi-supervised classi-
+Coignard, J., Saxena, S., Greenblatt, J., and Wang, D. Clean   fication with graph convolutional networks. CoRR,
+  vehicles as an enabler for a clean electricity grid. En-     abs/1609.02907, 2016. URL http://arxiv.org/
+  vironmental Research Letters, 13(5):054031, May 2018.        abs/1609.02907.
+  doi: 10.1088/1748-9326/aabe97. URL https://doi.
+  org/10.1088/1748-9326/aabe97.                              LeCun, Y., Bengio, Y., and Hinton, G. Deep learning. Na-
+                                                               ture, 521(7553):436–444, May 2015. ISSN 1476-4687.
+Colorado, B. Electric vehicle charging station energy con-     doi: 10.1038/nature14539. URL https://doi.org/
+  sumption, 2020.          URL https://open-data.              10.1038/nature14539.
+  bouldercolorado.gov/datasets/
+  2d8bad4baf274407a674d2ed3c657951_                          Lu, Y., Li, Y., Xie, D., Wei, E., Bao, X., Chen, H., and
+  0?orderBy=Start_Date___Time&amp;                             Zhong, X. The application of improved random forest
+  orderByAsc=false.                                            algorithm on the prediction of electric vehicle charging
+                         Deep Spatio-Temporal Forecasting of Electrical Vehicle Charging Demand
+
+  load. Energies, 11(11), 2018. ISSN 1996-1073. doi: 10.      Xydas, E., Marmaras, C., Cipcigan, L., Jenkins, N., Carroll,
+  3390/en11113207. URL https://www.mdpi.com/                    S., and Barker, M. A data-driven approach for charac-
+  1996-1073/11/11/3207.                                         terising the charging demand of electric vehicles: A uk
+                                                                case study. Applied Energy, 162:763–771, 01 2016. doi:
+Luo, M., Wen, H., Luo, Y., Du, B., Klemmer, K., and Zhu,       10.1016/j.apenergy.2015.10.151.
+  H. Dynamic demand prediction for expanding electric
+  vehicle sharing systems: A graph sequence learning ap-      Zhao, L., Song, Y., Zhang, C., Liu, Y., Wang, P., Lin, T.,
+  proach. ArXiv, abs/1903.04051, 2019.                          Deng, M., and Li, H. T-gcn: A temporal graph convolu-
+                                                                tional network for traffic prediction. IEEE Transactions
+Majidpour, M., Qiu, C., Chu, P., Pota, H. R., and               on Intelligent Transportation Systems, 21(9):3848–3858,
+ Gadh, R. Forecasting the ev charging load based                2020. doi: 10.1109/TITS.2019.2935152.
+ on customer profile or station measurement?       Ap-
+ plied Energy, 163:134–141, 2016.          ISSN 0306-
+ 2619. doi: https://doi.org/10.1016/j.apenergy.2015.10.
+ 184. URL https://www.sciencedirect.com/
+ science/article/pii/S0306261915014348.
+
+Miotti, M., Supran, G. J., Kim, E. J., and Trancik, J. E.
+ Personal vehicles evaluated against climate change miti-
+ gation targets. Environmental Science & Technology, 50
+ (20):10795–10804, Oct 2016. ISSN 0013-936X. doi:
+ 10.1021/acs.est.6b00177. URL https://doi.org/
+ 10.1021/acs.est.6b00177.
+
+PerthandKinross. Electric vehicle charging station us-
+  age, Oct 2020. URL https://data.pkc.gov.uk/
+  dataset/ev-charging-data.
+
+Rodrigues, F. and Pereira, F. C. Beyond expectation: Deep
+  joint mean and quantile regression for spatio-temporal
+  problems, 2018.
+
+Rolnick, D., Donti, P. L., Kaack, L. H., Kochanski, K., La-
+  coste, A., Sankaran, K., Ross, A. S., Milojevic-Dupont,
+  N., Jaques, N., Waldman-Brown, A., Luccioni, A., Ma-
+  haraj, T., Sherwin, E. D., Mukkavilli, S. K., Körding,
+  K. P., Gomes, C. P., Ng, A. Y., Hassabis, D., Platt,
+  J. C., Creutzig, F., Chayes, J., and Bengio, Y. Tack-
+  ling climate change with machine learning. CoRR,
+  abs/1906.05433, 2019. URL http://arxiv.org/
+  abs/1906.05433.
+
+Tao, Y., Huang, M., and Yang, L. Data-driven opti-
+  mized layout of battery electric vehicle charging infras-
+  tructure. Energy, 150:735–744, 2018. ISSN 0360-
+  5442. doi: https://doi.org/10.1016/j.energy.2018.03.
+  018. URL https://www.sciencedirect.com/
+  science/article/pii/S036054421830416X.
+
+Wei, W., Ramakrishnan, S., Needell, Z. A., and Tran-
+ cik, J. E. Personal vehicle electrification and charging
+ solutions for high-energy days. Nature Energy, 6(1):
+ 105–114, Jan 2021. ISSN 2058-7546. doi: 10.1038/
+ s41560-020-00752-y. URL https://doi.org/10.
+ 1038/s41560-020-00752-y.
+

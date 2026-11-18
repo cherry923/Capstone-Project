@@ -1,0 +1,19 @@
+{
+  "station_name": "인천시",
+  "weather_station_name": "인천",
+  "encoder_length": 168,
+  "decoder_length": 24,
+  "prediction_length": 24,
+  "hidden_size": 64,
+  "lstm_layers": 2,
+  "attention_heads": 4,
+  "dropout": 0.1,
+  "batch_size": 64,
+  "learning_rate": 0.001,
+  "max_epochs": 30,
+  "seed": 42,
+  "train_start": "2025-01-01",
+  "train_end": "2025-07-01",
+  "test_start": "2025-07-01",
+  "test_end": "2025-08-01"
+}

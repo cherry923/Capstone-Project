@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="refresh" content="0; url=dashboard.html?view=replay&period=presentation-2022-feb-transformer-month-loop&frame=624&autoplay=1" />
+    <title>GridFlow EV Dashboard</title>
+    <script>
+      window.sessionStorage.setItem("gridflowAdminLoggedIn", "true");
+      if (!window.sessionStorage.getItem("gridflowAdminName")) {
+        window.sessionStorage.setItem("gridflowAdminName", "demo");
+      }
+      window.location.replace("dashboard.html?view=replay&period=presentation-2022-feb-transformer-month-loop&frame=624&autoplay=1");
+    </script>
+  </head>
+  <body>
+    <p>
+      운영 리플레이로 이동 중입니다.
+      <a href="dashboard.html?view=replay&period=presentation-2022-feb-transformer-month-loop&frame=624&autoplay=1">바로 열기</a>
+    </p>
+  </body>
+</html>

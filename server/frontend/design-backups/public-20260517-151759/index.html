@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GridFlow EV Admin Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-hero">
+        <p class="eyebrow">관리자 접속</p>
+        <h1>다중 충전소 전력 관제 접속</h1>
+        <p>
+          태양광 발전량, 보조 배터리 잔량, 충전 요청, 전기요금 상태를
+          한눈에 확인하는 운영 콘솔입니다.
+        </p>
+      </section>
+
+      <section class="admin-login-panel" aria-label="관리자 로그인">
+        <div>
+          <p class="eyebrow">로그인</p>
+          <h2>관리자 로그인</h2>
+        </div>
+
+        <div class="field">
+          <label for="admin-id">관리자 ID</label>
+          <input id="admin-id" value="operator_01" />
+        </div>
+
+        <a class="primary-button login-link" href="dashboard.html">운영 콘솔 접속</a>
+
+        <div class="login-meta">
+          <span>관리 대상</span>
+          <strong>다중 충전소 운영 콘솔</strong>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,126 @@
+{
+  "model_id": "evcs_api_model_v3_fallback_shield",
+  "run_name": "evcs_api_model_v3_fallback_shield",
+  "created_at": "2026-05-20T03:05:00",
+  "purpose": "Production candidate: PV+TOU rule (DefaultUpper + DefaultLower) overlaid with C6 forecast-aware safety shield. 30-day benchmark: -14.76% J vs grid_only @ 998kWh, beats every PI-SAC variant we trained (v1 synthetic, v2 real-data, v3 forecast-aware obs).",
+  "data": {
+    "train_data_mode": "n/a (rule-based)",
+    "real_data_path": null,
+    "synthetic_data": false,
+    "evaluation_dates": "2022-05-24 ~ 2022-06-22 (30 days, paired delta vs v1/v2/v3 PI-SAC variants)"
+  },
+  "algorithm": {
+    "upper_algo": "DEFAULT",
+    "lower_algo": "DEFAULT",
+    "upper_for_training": "DEFAULT",
+    "independent_lower_agents": true,
+    "uses_safety_shield": true
+  },
+  "model_files": {
+    "upper_model": {
+      "role": "upper",
+      "algo": "DEFAULT",
+      "type": "stateless",
+      "path": null,
+      "description": "DefaultUpperPlanner: zero share-plan (no inter-station energy transfer)"
+    },
+    "lower_models": [
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 0,
+        "station_idx": 0,
+        "type": "stateless",
+        "path": null,
+        "description": "DefaultLowerAgent: zero action (no ESS move), then overridden by C6 safety shield"
+      },
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 1,
+        "station_idx": 1,
+        "type": "stateless",
+        "path": null
+      },
+      {
+        "role": "lower",
+        "algo": "DEFAULT",
+        "index": 2,
+        "station_idx": 2,
+        "type": "stateless",
+        "path": null
+      }
+    ]
+  },
+  "environment": {
+    "n_station": 3,
+    "horizon": 24,
+    "station_config": {
+      "pv_capacity_kwh": 100.0,
+      "ess_capacity_kwh": 998.0,
+      "ess_max_ratio": 0.1,
+      "soc_min": 0.1,
+      "soc_max": 0.9,
+      "vmax_kwh": 1200.0,
+      "peak_limit_kwh": 450.0
+    },
+    "system_config": {
+      "n_station": 3,
+      "horizon": 24,
+      "tou_low": 84.5,
+      "tou_mid": 111.9,
+      "tou_high": 174.0,
+      "share_abs_max_kwh": 120.0,
+      "share_transfer_cost": 0.03
+    }
+  },
+  "shield_config": {
+    "peak_limit_kwh": 450.0,
+    "soc_min": 0.10,
+    "soc_max": 0.90,
+    "soc_low_reserve_threshold": 0.30,
+    "ess_max_ratio_per_step": 0.10,
+    "ess_capacity_kwh": 998.0,
+    "future_horizon_hours": 6
+  },
+  "deployment_notes": {
+    "ev_scale_calibration": "If the upstream payload (DEFAULT_EV_SAC_PAYLOAD_PATH) is aggregated to jeju_total (peak ~3733 kWh/hour), include ev_scale ≈ 0.43 in the dispatch request body so per-station peak settles in the shield-effective range (~peak_limit + 100 kWh = ~550 kWh per station).",
+    "spec_mismatch_warning": "Station spec (ess_capacity_kwh=998, peak_limit_kwh=450) is sized for a single charging hub. Payload at ev_scale=1.0 represents aggregate jeju demand and exceeds spec by ~3x; shield discharges saturate at 99.8 kWh and provide minimal relief.",
+    "calibrated_e2e_2026-05-20": {
+      "ev_scale": 0.43,
+      "grid_cost_KRW_per_day": 2525185,
+      "total_peak_violation_kwh": 507,
+      "total_soc_violation_kwh": 0,
+      "shield_active_rows": "6/72"
+    }
+  },
+  "evaluation": {
+    "benchmark_30day_J_vs_grid_only_pct": -14.76,
+    "benchmark_30day_violation_rate_pct": 57.08,
+    "benchmark_30day_peak_violation_kwh_per_day": 18199,
+    "benchmark_30day_soc_violation_kwh_per_day": 0,
+    "benchmark_30day_action_saturation_pct": 13.43,
+    "benchmark_report": "ai_module/artifacts/ev_option_C_fallback_shield_winner_2026-05-20.md"
+  },
+  "api_input_schema": {
+    "description": "Same as v1: server queries day_data by date from DB.",
+    "required_rows": "n_station * horizon",
+    "required_columns": [
+      "date", "station", "hour",
+      "pv_forecast", "demand_forecast",
+      "pv_actual", "demand_actual",
+      "tou"
+    ],
+    "optional_inputs": ["init_soc", "demand_p90"]
+  },
+  "api_output_schema": {
+    "description": "Same as v1 + shield activation flag in per-row metadata (future enhancement).",
+    "columns": [
+      "date", "t", "station", "soc_before", "soc_after",
+      "pv_actual", "demand_actual", "tou",
+      "share", "a_ess", "a_pv",
+      "grid_total_kwh", "grid_cost", "self_supply_kwh", "loss_kwh",
+      "peak_violation", "soc_violation", "objective_reward"
+    ]
+  }
+}
